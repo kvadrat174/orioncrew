@@ -8,8 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Очистить кэш npm и установить зависимости
-RUN npm cache clean --force && \
-    npm install --verbose --no-audit --no-fund
+RUN npm install
 
 # Скопировать исходный код
 COPY . .
