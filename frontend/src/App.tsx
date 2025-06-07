@@ -1,4 +1,3 @@
-import React from "react";
 import TelegramCrewApp from "./components/TelegramCrewApp";
 
 function App() {
