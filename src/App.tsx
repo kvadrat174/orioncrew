@@ -1,5 +1,4 @@
-import TelegramCrewApp from './components/TelegramCrewApp';
-import './index.css';
+import TelegramCrewApp from "./components/TelegramCrewApp";
 
 function App() {
   return <TelegramCrewApp />;
