@@ -1,4 +1,5 @@
 interface TelegramWebApp {
+    [x: string]: string;
     initData: string;
     initDataUnsafe: {
       query_id?: string;
