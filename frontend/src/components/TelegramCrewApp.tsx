@@ -33,8 +33,10 @@ const TelegramCrewApp: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [seaTrips, setSeaTrips] = useState<SeaTrip[]>([]);
   const [tgUser, setTgUser] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [tg, setTg] = useState<any>(null);
 
+  console.log(tg)
   useEffect(() => {
     WebApp.ready(); // Инициализация Telegram Web App SDK
   }, []);
