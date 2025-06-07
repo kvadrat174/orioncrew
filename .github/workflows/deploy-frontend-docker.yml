@@ -1,0 +1,40 @@
+name: 🚢 Deploy frontend Docker container to crew.mysailing.ru
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
+        run: ssh-keyscan crew.mysailing.ru >> ~/.ssh/known_hosts
+
+      - name: Copy frontend to server
+        run: |
+          rsync -az --delete \
+            ./frontend/ \
+            ${{ secrets.SSH_USER }}@crew.mysailing.ru:/home/deploy/orioncrew/frontend/
+
+      - name: Build and run Docker on server
+        run: |
+          ssh ${{ secrets.SSH_USER }}@crew.mysailing.ru << 'EOF'
+            cd /home/deploy/orioncrew/frontend
+            docker stop frontend-app || true
+            docker rm frontend-app || true
+            docker build -t frontend-app .
+            docker run -d --name frontend-app -p 3300:3300 frontend-app
+          EOF
