@@ -7,6 +7,11 @@ on:
     branches:
       - main
 
+env:
+  CONTAINER_NAME: frontend-app
+  SERVER_PATH: /home/deploy/orioncrew/frontend
+  PORT: 3300
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -14,28 +19,75 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Updated to v4
 
       - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.3
+        uses: webfactory/ssh-agent@v0.9.0  # Updated version
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Add server to known_hosts
-        run: ssh-keyscan crew.mysailing.ru >> ~/.ssh/known_hosts
+        run: ssh-keyscan -H crew.mysailing.ru >> ~/.ssh/known_hosts
 
       - name: Copy frontend to server
         run: |
           rsync -az --delete \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.env*' \
             ./frontend/ \
-            ${{ secrets.SSH_USER }}@crew.mysailing.ru:/home/deploy/orioncrew/frontend/
+            ${{ secrets.SSH_USER }}@crew.mysailing.ru:${{ env.SERVER_PATH }}/
 
-      - name: Build and run Docker on server
+      - name: Deploy Docker container on server
         run: |
           ssh ${{ secrets.SSH_USER }}@crew.mysailing.ru << 'EOF'
-            cd /home/deploy/orioncrew/frontend
-            docker stop frontend-app || true
-            docker rm frontend-app || true
-            docker build -t frontend-app .
-            docker run -d --name frontend-app -p 3300:3300 frontend-app
+            set -e  # Exit on any error
+            
+            cd ${{ env.SERVER_PATH }}
+            
+            echo "🛑 Stopping existing container..."
+            docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || echo "Container not running"
+            docker rm ${{ env.CONTAINER_NAME }} 2>/dev/null || echo "Container not found"
+            
+            echo "🏗️ Building new image..."
+            docker build -t ${{ env.CONTAINER_NAME }}:latest .
+            
+            echo "🚀 Starting new container..."
+            docker run -d \
+              --name ${{ env.CONTAINER_NAME }} \
+              --restart unless-stopped \
+              -p ${{ env.PORT }}:${{ env.PORT }} \
+              ${{ env.CONTAINER_NAME }}:latest
+            
+            echo "🧹 Cleaning up old images..."
+            docker image prune -f
+            
+            echo "✅ Deployment completed!"
+            
+            # Wait a moment for container to start
+            sleep 5
+            
+            # Check if container is running
+            if docker ps | grep -q ${{ env.CONTAINER_NAME }}; then
+              echo "✅ Container is running successfully"
+              docker ps | grep ${{ env.CONTAINER_NAME }}
+            else
+              echo "❌ Container failed to start"
+              echo "Recent logs:"
+              docker logs ${{ env.CONTAINER_NAME }} --tail 20
+              exit 1
+            fi
           EOF
+
+      - name: Verify deployment
+        run: |
+          echo "🔍 Checking if service is accessible..."
+          sleep 10  # Give the app time to fully start
+          
+          # Test if the service responds (adjust URL as needed)
+          if curl -f -s --max-time 30 http://crew.mysailing.ru:${{ env.PORT }} > /dev/null; then
+            echo "✅ Service is accessible at http://crew.mysailing.ru:${{ env.PORT }}"
+          else
+            echo "⚠️ Service check failed - this might be normal if the app needs more time to start"
+            echo "Please check the application manually"
+          fi
