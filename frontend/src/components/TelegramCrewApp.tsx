@@ -54,7 +54,7 @@ const TelegramCrewApp: React.FC = () => {
       document.body.style.backgroundColor =
         telegramApp.backgroundColor || (isDark ? "#1f2937" : "#ffffff");
       document.body.style.color =
-        telegramApp.textColor || (isDark ? "#ffffff" : "#000000");
+        telegramApp.textColor || (!isDark ? "#ffffff" : "#000000");
 
       // Настройка заголовка
       telegramApp.MainButton.setText("Обновить данные");
