@@ -8,6 +8,7 @@ import {
   MapPin,
   User,
 } from "lucide-react";
+import WebApp from "@twa-dev/sdk";
 
 interface CrewMember {
   id: number;
@@ -33,6 +34,10 @@ const TelegramCrewApp: React.FC = () => {
   const [seaTrips, setSeaTrips] = useState<SeaTrip[]>([]);
   const [tgUser, setTgUser] = useState<any>(null);
   const [tg, setTg] = useState<any>(null);
+
+  useEffect(() => {
+    WebApp.ready(); // Инициализация Telegram Web App SDK
+  }, []);
 
   // Инициализация Telegram WebApp
   useEffect(() => {
