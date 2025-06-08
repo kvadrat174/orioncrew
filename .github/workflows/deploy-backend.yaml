@@ -33,9 +33,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /crew-backend/backend
-            npm install
-            npm install elysia @elysiajs/node
-            npm install --save-dev tsx @types/node typescript
             export BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
             docker-compose down
             BOT_TOKEN=$BOT_TOKEN docker-compose up -d --build
