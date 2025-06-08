@@ -81,7 +81,7 @@ const TelegramCrewApp: React.FC = () => {
   useEffect(() => {
     const fetchTrips = async () => {
       try {
-        const response = await axios.get<SeaTrip[]>("http://crew.mysailing.ru/api/trips");
+        const response = await axios.get<SeaTrip[]>("https://crew.mysailing.ru/api/trips");
         setSeaTrips(response.data);
       } catch (error) {
         console.error("Ошибка при загрузке данных о рейсах:", error);
