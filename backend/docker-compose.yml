@@ -10,7 +10,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3500:3000"  # Внешний 3500 → Внутренний 3000
+      - "3500:3500"  # Внешний 3500 → Внутренний 3000
     environment:
       - NODE_ENV=production
       - BOT_TOKEN=${BOT_TOKEN}

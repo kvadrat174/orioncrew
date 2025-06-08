@@ -3,7 +3,7 @@ import { node } from "@elysiajs/node";
 import { telegramBotWebhook } from "./tg/webhook";
 import TelegramBot from "./tg/TelegramBot";
 
-const PORT = 3000;
+const PORT = 3500;
 const HOSTNAME = "0.0.0.0";
 
 interface CrewMember {
