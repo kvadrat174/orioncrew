@@ -1,24 +1,19 @@
-# Простая версия без мультистейдж билда
-FROM node:22-alpine
+FROM node:22-slim
 
-# Установить рабочую директорию
+# Создаем и переключаемся на непривилегированного пользователя
 WORKDIR /app
+RUN chown -R node:node /app
+USER node
 
-# Скопировать package файлы
-COPY package*.json ./
+# Копируем package.json отдельно для лучшего кэширования
+COPY --chown=node:node package*.json ./
 
-# Очистить кэш npm и установить зависимости
-RUN npm install
+# Устанавливаем зависимости с чистым кэшем
+RUN npm install --cache /tmp/empty-cache && \
+    npm cache clean --force
 
-# Скопировать исходный код
-COPY . .
+# Копируем остальные файлы
+COPY --chown=node:node . .
 
-# Создать директории с правильными правами
-RUN mkdir -p dist public logs && \
-    chmod -R 755 /app
-
-# Экспортировать порт
-EXPOSE 3300
-
-# Запустить приложение
+EXPOSE 3000
 CMD ["npm", "run", "dev"]
