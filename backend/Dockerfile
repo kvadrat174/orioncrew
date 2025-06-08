@@ -4,4 +4,4 @@ WORKDIR /app
 
 COPY . .
 
-CMD ["npm", "dev"]
+CMD ["npm", "run", "dev"]
