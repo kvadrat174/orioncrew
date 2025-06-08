@@ -3,6 +3,8 @@ name: Deploy React App to Server
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'frontend/**'
 
 jobs:
   build-and-deploy:

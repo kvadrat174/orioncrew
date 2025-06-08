@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'backend/**'
 
 jobs:
   deploy:
@@ -21,12 +23,12 @@ jobs:
 
     - name: Copy backend to remote server
       run: |
-        rsync -avz --delete ./backend/ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:/path/to/app/backend
+        rsync -avz --delete ./backend/ ${{ secrets.SSH_USER }}@217.25.88.96:/crew-backend
 
     - name: Run docker-compose on remote server
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-          cd /path/to/app/backend
+          cd /crew-backend
           export BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
           docker-compose down
           BOT_TOKEN=$BOT_TOKEN docker-compose up -d --build
