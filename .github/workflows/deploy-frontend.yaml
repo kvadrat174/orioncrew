@@ -24,13 +24,13 @@ jobs:
           npm run build
         working-directory: frontend
 
-      - name: Deploy to Server via SCP
+      - name: Deploy to Server via SSH
         uses: appleboy/scp-action@v0.1.6
         with:
-          host: 217.25.88.96
+          host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "frontend/build/"
+          source: "./build/"
           target: "/home/deploy/orioncrew/frontend"
 
       - name: Restart Nginx
