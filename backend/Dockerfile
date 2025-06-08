@@ -4,12 +4,8 @@ FROM node:22-alpine
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем package.json и устанавливаем зависимости
-COPY package*.json ./
-RUN npm install
-
-# Копируем остальной код
 COPY . .
+RUN npm install
 
 # Собираем TypeScript
 RUN npm run build
