@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3500:3000"  # Внешний 3500 → Внутренний 3000
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - .:/app
+    restart: always
