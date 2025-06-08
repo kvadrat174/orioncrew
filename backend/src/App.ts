@@ -3,7 +3,7 @@ import { node } from "@elysiajs/node";
 import { telegramBotWebhook } from "./tg/webhook";
 import TelegramBot from "./tg/TelegramBot";
 
-const token = "7507527948:AAFlNhIKxrU37fZiaxmqSaXY9b24qlmFKNc";
+const token = "";
 const PORT = 3000;
 const HOSTNAME = "localhost";
 
