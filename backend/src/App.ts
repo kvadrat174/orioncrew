@@ -14,7 +14,9 @@ interface CrewMember {
     experience: string;
   }
 interface SeaTrip {
+    type: "morningTraining" | "training" | "trainingrace" | "race" | "commercial"
     date: string;
+    time: string;
     crew: CrewMember[];
     vessel: string;
     departure: string;
@@ -26,6 +28,8 @@ interface SeaTrip {
   const mockData: SeaTrip[] = [
     {
       date: "2025-06-08",
+      time: '06:30',
+      type: 'morningTraining',
       vessel: "Морской Волк",
       departure: "06:00",
       estimatedReturn: "18:00",
@@ -63,6 +67,8 @@ interface SeaTrip {
     },
     {
       date: "2025-06-10",
+      time: '06:00',
+      type: 'race',
       vessel: "Удача",
       departure: "05:30",
       estimatedReturn: "19:00",
@@ -98,8 +104,48 @@ interface SeaTrip {
       ],
     },
     {
+        date: "2025-06-10",
+        time: '18:30',
+        type: 'race',
+        vessel: "Удача",
+        departure: "05:30",
+        estimatedReturn: "19:00",
+        destination: "Восточная зона",
+        status: "planned",
+        crew: [
+          {
+            id: 5,
+            name: "Николай Козлов",
+            position: "Капитан",
+            phone: "+7-911-456-78-90",
+            experience: "20 лет",
+          },
+          {
+            id: 6,
+            name: "Андрей Рыбин",
+            position: "Боцман",
+            phone: "+7-911-567-89-01",
+            experience: "10 лет",
+          },
+          {
+            id: 7,
+            name: "Михаил Морской",
+            position: "Рыбак",
+            experience: "7 лет",
+          },
+          {
+            id: 8,
+            name: "Олег Штормов",
+            position: "Рыбак",
+            experience: "3 года",
+          },
+        ],
+      },
+    {
       date: "2025-06-12",
+      time: '18:30',
       vessel: "Нептун",
+      type: "commercial",
       departure: "07:00",
       estimatedReturn: "17:30",
       destination: "Южная акватория",

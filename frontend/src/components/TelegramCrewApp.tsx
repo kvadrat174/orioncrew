@@ -21,7 +21,9 @@ interface CrewMember {
 }
 
 interface SeaTrip {
+  type: "morningTraining" | "training" | "trainingrace" | "race" | "commercial";
   date: string;
+  time: string;
   crew: CrewMember[];
   vessel: string;
   departure: string;
@@ -43,7 +45,6 @@ const TelegramCrewApp: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [seaTrips, setSeaTrips] = useState<SeaTrip[]>([]);
   const [tgUser, setTgUser] = useState<TgUser | null>(null);
-  
 
   useEffect(() => {
     WebApp.ready(); // Инициализация Telegram Web App SDK
@@ -81,13 +82,15 @@ const TelegramCrewApp: React.FC = () => {
   useEffect(() => {
     const fetchTrips = async () => {
       try {
-        const response = await axios.get<SeaTrip[]>("https://crew.mysailing.ru/api/trips");
+        const response = await axios.get<SeaTrip[]>(
+          "https://crew.mysailing.ru/api/trips"
+        );
         setSeaTrips(response.data);
       } catch (error) {
         console.error("Ошибка при загрузке данных о рейсах:", error);
       }
     };
-  
+
     fetchTrips();
   }, []);
 
@@ -120,8 +123,8 @@ const TelegramCrewApp: React.FC = () => {
     ).padStart(2, "0")}`;
   };
 
-  const getTripForDate = (dateString: string) => {
-    return seaTrips.find((trip) => trip.date === dateString);
+  const getTripsForDate = (dateString: string) => {
+    return seaTrips.filter((trip) => trip.date === dateString);
   };
 
   const getStatusColor = (status: string) => {
@@ -137,14 +140,18 @@ const TelegramCrewApp: React.FC = () => {
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: SeaTrip["type"]) => {
     switch (status) {
-      case "planned":
-        return "Запланировано";
-      case "active":
-        return "В море";
-      case "completed":
-        return "Завершено";
+      case "morningTraining":
+        return "Утренняя тренировка";
+      case "training":
+        return "Тренировка";
+      case "trainingrace":
+        return "Тренировочкая гонка";
+      case "race":
+        return "Гонка";
+      case "commercial":
+        return "Мастер-класс";
       default:
         return "Неизвестно";
     }
@@ -153,7 +160,7 @@ const TelegramCrewApp: React.FC = () => {
   const days = getDaysInMonth(currentMonth);
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
-  const selectedTrip = selectedDate ? getTripForDate(selectedDate) : null;
+  const selectedTrips = selectedDate ? getTripsForDate(selectedDate) : null;
 
   const monthNames = [
     "Январь",
@@ -232,7 +239,7 @@ const TelegramCrewApp: React.FC = () => {
               }
 
               const dateString = formatDate(year, month, day);
-              const trip = getTripForDate(dateString);
+              const trips = getTripsForDate(dateString);
               const isSelected = selectedDate === dateString;
 
               return (
@@ -246,11 +253,11 @@ const TelegramCrewApp: React.FC = () => {
                         ? "bg-blue-600 text-white"
                         : "hover:bg-gray-100"
                     }
-                    ${trip ? "font-bold" : ""}
+                    ${trips ? "font-bold" : ""}
                   `}
                 >
                   {day}
-                  {trip && (
+                  {trips.length && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
                   )}
                 </button>
@@ -260,80 +267,81 @@ const TelegramCrewApp: React.FC = () => {
         </div>
 
         {/* Детали выбранного дня */}
-        {selectedTrip && (
-          <div className="border-t bg-gray-50 p-4">
-            <div className="space-y-4">
-              {/* Информация о рейсе */}
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold flex items-center">
-                    <Ship className="w-5 h-5 mr-2 text-blue-600" />
-                    {selectedTrip.vessel}
-                  </h3>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                      selectedTrip.status
-                    )}`}
-                  >
-                    {getStatusText(selectedTrip.status)}
-                  </span>
-                </div>
-
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 mr-2" />
-                    <span>
-                      Выход: {selectedTrip.departure} | Возвращение:{" "}
-                      {selectedTrip.estimatedReturn}
+        {selectedTrips?.length &&
+          selectedTrips.map((selectedTrip) => (
+            <div className="border-t bg-gray-50 p-4">
+              <div className="space-y-4">
+                {/* Информация о рейсе */}
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold flex items-center">
+                      <Ship className="w-5 h-5 mr-2 text-blue-600" />
+                      {selectedTrip.vessel}
+                    </h3>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                        selectedTrip.type
+                      )}`}
+                    >
+                      {getStatusText(selectedTrip.type)}
                     </span>
                   </div>
-                  <div className="flex items-center">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    <span>{selectedTrip.destination}</span>
+
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-2" />
+                      <span>
+                        Выход: {selectedTrip.departure} | Возвращение:{" "}
+                        {selectedTrip.estimatedReturn}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      <span>{selectedTrip.destination}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Состав экипажа */}
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <h4 className="text-md font-semibold mb-3 flex items-center">
-                  <Users className="w-5 h-5 mr-2 text-blue-600" />
-                  Состав экипажа ({selectedTrip.crew.length} чел.)
-                </h4>
+                {/* Состав экипажа */}
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <h4 className="text-md font-semibold mb-3 flex items-center">
+                    <Users className="w-5 h-5 mr-2 text-blue-600" />
+                    Состав экипажа ({selectedTrip.crew.length} чел.)
+                  </h4>
 
-                <div className="space-y-3">
-                  {selectedTrip.crew.map((member) => (
-                    <div
-                      key={member.id}
-                      className="border-l-4 border-blue-600 pl-3 py-2"
-                    >
-                      <div className="font-medium text-gray-900">
-                        {member.name}
-                      </div>
-                      <div className="text-sm text-blue-600 font-medium">
-                        {member.position}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Опыт: {member.experience}
-                      </div>
-                      {member.phone && (
-                        <div className="flex items-center text-sm text-gray-600 mt-1">
-                          <Phone className="w-3 h-3 mr-1" />
-                          <a
-                            href={`tel:${member.phone}`}
-                            className="hover:text-blue-600"
-                          >
-                            {member.phone}
-                          </a>
+                  <div className="space-y-3">
+                    {selectedTrip.crew.map((member) => (
+                      <div
+                        key={member.id}
+                        className="border-l-4 border-blue-600 pl-3 py-2"
+                      >
+                        <div className="font-medium text-gray-900">
+                          {member.name}
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        <div className="text-sm text-blue-600 font-medium">
+                          {member.position}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Опыт: {member.experience}
+                        </div>
+                        {member.phone && (
+                          <div className="flex items-center text-sm text-gray-600 mt-1">
+                            <Phone className="w-3 h-3 mr-1" />
+                            <a
+                              href={`tel:${member.phone}`}
+                              className="hover:text-blue-600"
+                            >
+                              {member.phone}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          ))}
 
         {/* Сообщение когда день не выбран */}
         {!selectedDate && (
