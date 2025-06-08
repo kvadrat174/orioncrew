@@ -58,9 +58,8 @@ const TelegramCrewApp: React.FC = () => {
       telegramApp.expand();
 
       // Настройка темы
-      const isDark = telegramApp.colorScheme === "dark";
-      document.body.style.backgroundColor =
-        telegramApp.backgroundColor || (isDark ? "#1f2937" : "#ffffff");
+      // const isDark = telegramApp.colorScheme === "dark";
+      document.body.style.backgroundColor = "#1f2937";
       // document.body.style.color =
       //   telegramApp.textColor || (!isDark ? "#ffffff" : "#000000");
 
