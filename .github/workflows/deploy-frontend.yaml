@@ -11,9 +11,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Navigate to React app directory
-      run: cd your-react-app-folder
+      run: cd frontend
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
