@@ -68,7 +68,7 @@ interface SeaTrip {
     {
       date: "2025-06-10",
       time: '06:00',
-      type: 'race',
+      type: 'training',
       vessel: "Удача",
       departure: "05:30",
       estimatedReturn: "19:00",
