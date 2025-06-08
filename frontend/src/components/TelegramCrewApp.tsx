@@ -9,6 +9,7 @@ import {
   User,
 } from "lucide-react";
 import WebApp from "@twa-dev/sdk";
+import type { TgUser } from "../types/telegram";
 
 interface CrewMember {
   id: number;
@@ -28,15 +29,21 @@ interface SeaTrip {
   status: "planned" | "active" | "completed";
 }
 
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: typeof WebApp; // или более специфичный тип если есть
+    };
+  }
+}
+
 const TelegramCrewApp: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [seaTrips, setSeaTrips] = useState<SeaTrip[]>([]);
-  const [tgUser, setTgUser] = useState<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [tg, setTg] = useState<any>(null);
+  const [tgUser, setTgUser] = useState<TgUser | null>(null);
+  
 
-  console.log(tg)
   useEffect(() => {
     WebApp.ready(); // Инициализация Telegram Web App SDK
   }, []);
@@ -45,8 +52,7 @@ const TelegramCrewApp: React.FC = () => {
   useEffect(() => {
     if (typeof window !== "undefined" && window.Telegram?.WebApp) {
       const telegramApp = window.Telegram.WebApp;
-      setTg(telegramApp);
-      setTgUser(telegramApp.initDataUnsafe?.user);
+      setTgUser(telegramApp.initDataUnsafe.user ?? null);
 
       telegramApp.ready();
       telegramApp.expand();
@@ -55,8 +61,8 @@ const TelegramCrewApp: React.FC = () => {
       const isDark = telegramApp.colorScheme === "dark";
       document.body.style.backgroundColor =
         telegramApp.backgroundColor || (isDark ? "#1f2937" : "#ffffff");
-      document.body.style.color =
-        telegramApp.textColor || (!isDark ? "#ffffff" : "#000000");
+      // document.body.style.color =
+      //   telegramApp.textColor || (!isDark ? "#ffffff" : "#000000");
 
       // Настройка заголовка
       telegramApp.MainButton.setText("Обновить данные");

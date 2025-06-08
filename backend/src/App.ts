@@ -3,14 +3,13 @@ import { node } from "@elysiajs/node";
 import { telegramBotWebhook } from "./tg/webhook";
 import TelegramBot from "./tg/TelegramBot";
 
-const token = "";
 const PORT = 3000;
 const HOSTNAME = "localhost";
 
 const create = async () => {
-  const tgBot = await TelegramBot.create(token);
+  const tgBot = await TelegramBot.create(process.env.BOT_TOKEN);
   const app = new Elysia({ adapter: node() })
-    .use(telegramBotWebhook(tgBot.bot, token))
+    .use(telegramBotWebhook(tgBot.bot, process.env.BOT_TOKEN))
     .get("/", () => "Hello Elysia")
     .listen(PORT, ({ hostname, port }) => {
       console.log(`🦊 Elysia is running at ${HOSTNAME}:${port}`);
