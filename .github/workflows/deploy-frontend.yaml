@@ -30,7 +30,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "./build/"
+          source: "./dist/"
           target: "/home/deploy/orioncrew/frontend"
 
       - name: Restart Nginx
