@@ -22,7 +22,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "backend/"
+          source: "backend"
           target: "/crew-backend"
 
       - name: Run docker-compose via SSH
@@ -32,7 +32,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /crew-backend
+            cd /crew-backend/backend
             export BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
             docker-compose down
             BOT_TOKEN=$BOT_TOKEN docker-compose up -d --build
