@@ -2,6 +2,9 @@ version: '3.8'
 
 services:
   backend:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     container_name: backend
     build:
       context: .
