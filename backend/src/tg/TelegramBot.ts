@@ -167,11 +167,11 @@ const replyStart = (
 ) => {
   const localeData = { firstName }
   return {
-    answer: "wwwwwwwww",
+    answer: "Орион планирование",
     body: {
       parse_mode: 'Markdown' as const,
       reply_markup: btn(lang, showLangBts),
-      photo: `https://static.hamsterkombatgame.io/s2_common/offer_event4_modal.webp`
+      photo: `https://www.google.com/url?sa=i&url=https%3A%2F%2Fdepositphotos.com%2Fru%2Fphotos%2F%25D1%258F%25D1%2585%25D1%2582%25D0%25B8%25D0%25BD%25D0%25B3.html&psig=AOvVaw1PZEOLlSSIQf7ES6knYUkR&ust=1749491780677000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCIDuoPOy4o0DFQAAAAAdAAAAABAg`
     },
   }
 }
