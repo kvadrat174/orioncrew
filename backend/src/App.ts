@@ -4,7 +4,7 @@ import { telegramBotWebhook } from "./tg/webhook";
 import TelegramBot from "./tg/TelegramBot";
 
 const PORT = 3500;
-const HOSTNAME = "0.0.0.0";
+const HOSTNAME = "127.0.0.1";
 
 interface CrewMember {
     id: number;
