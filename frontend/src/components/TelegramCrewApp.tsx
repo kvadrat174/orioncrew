@@ -140,8 +140,8 @@ const TelegramCrewApp: React.FC = () => {
     }
   };
 
-  const getStatusText = (status: SeaTrip["type"]) => {
-    switch (status) {
+  const getTypeText = (type: SeaTrip["type"]) => {
+    switch (type) {
       case "morningTraining":
         return "Утренняя тренировка";
       case "training":
@@ -283,7 +283,7 @@ const TelegramCrewApp: React.FC = () => {
                         selectedTrip.type
                       )}`}
                     >
-                      {getStatusText(selectedTrip.type)}
+                      {getTypeText(selectedTrip.type)}
                     </span>
                   </div>
 
@@ -291,7 +291,7 @@ const TelegramCrewApp: React.FC = () => {
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-2" />
                       <span>
-                        Выход: {selectedTrip.departure} | Возвращение:{" "}
+                        Выход: {selectedTrip.departure} - {selectedTrip.time} | Возвращение:{" "}
                         {selectedTrip.estimatedReturn}
                       </span>
                     </div>
