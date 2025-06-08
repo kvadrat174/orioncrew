@@ -147,7 +147,7 @@ const btn = (
   showLangBts: boolean,
 ): InlineKeyboard => {
   const Boost = {
-    btn: InlineKeyboard.url('Hamster Boost - Выиграй TON! 🔥', `https://t.me/orion_sailing_team_bot/orion_sail?startapp`),
+    btn: InlineKeyboard.url('Записывайся на тренировки и гонки! 🔥', `https://t.me/orion_sailing_team_bot/orion_sail?startapp`),
   }
   return InlineKeyboard.from([[Boost.btn], langBtns(showLangBts, lang)])
 
