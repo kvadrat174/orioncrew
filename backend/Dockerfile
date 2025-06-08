@@ -1,8 +1,8 @@
-FROM node:22-alpine
+FROM node:22
 
 WORKDIR /app
 
 COPY . .
-RUN yarn
+RUN npm i
 
 CMD ["sh", "entrypoint.sh"]

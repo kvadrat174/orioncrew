@@ -1,3 +1,3 @@
 #!/bin/sh
 # yarn migration:run
-yarn dev
+npm run dev
