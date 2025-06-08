@@ -13,6 +13,7 @@ services:
       - "3500:3000"  # Внешний 3500 → Внутренний 3000
     environment:
       - NODE_ENV=production
+      - BOT_TOKEN=${BOT_TOKEN}
     volumes:
       - .:/app
     restart: always
