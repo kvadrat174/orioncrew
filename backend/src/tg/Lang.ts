@@ -1,6 +1,6 @@
 import locale from './locale'
 
-export type Lang = keyof typeof locale.Start
+export type Lang = keyof typeof locale.Start;
 
 export const getLang = (languageCode?: string): Lang => {
   if (!languageCode) return 'en'
