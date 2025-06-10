@@ -1,5 +1,5 @@
-import schedule from 'node-schedule'
-import csv from 'csvtojson'
+import { scheduleJob } from 'node-schedule'
+import * as csv from 'csvtojson'
 
 export type TripsService = Awaited<ReturnType<typeof create>>
 
@@ -69,7 +69,7 @@ const create = async () => {
   await updateTrips()
 
   // Настраиваем cron job для обновления каждую минуту
-  const job = schedule.scheduleJob('*/5 * * * *', async function () {
+  const job = scheduleJob('*/5 * * * *', async function () {
     try {
       await updateTrips()
     } catch (error) {
