@@ -21,7 +21,14 @@ interface CrewMember {
 }
 
 interface SeaTrip {
-  type: "morningTraining" | "training" | "trainingrace" | "race" | "commercial";
+  type:
+    | "morningTraining"
+    | "training"
+    | "trainingrace"
+    | "race"
+    | "trip"
+    | "commercial"
+    | "ladoga";
   date: string;
   time: string;
   crew: CrewMember[];
@@ -152,6 +159,10 @@ const TelegramCrewApp: React.FC = () => {
         return "Гонка";
       case "commercial":
         return "Мастер-класс";
+      case "trip":
+        return "Поход";
+      case "ladoga":
+        return "Ладога";
       default:
         return "Неизвестно";
     }
@@ -291,8 +302,8 @@ const TelegramCrewApp: React.FC = () => {
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-2" />
                       <span>
-                        Выход: {selectedTrip.departure} - {selectedTrip.time} | Возвращение:{" "}
-                        {selectedTrip.estimatedReturn}
+                        Выход: {selectedTrip.departure} - {selectedTrip.time} |
+                        Возвращение: {selectedTrip.estimatedReturn}
                       </span>
                     </div>
                     <div className="flex items-center">
