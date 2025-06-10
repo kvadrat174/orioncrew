@@ -1,5 +1,5 @@
-import * as schedule from 'node-schedule'
-import * as csv from 'csvtojson'
+import schedule from 'node-schedule'
+import csv from 'csvtojson'
 
 export type TripsService = Awaited<ReturnType<typeof create>>
 
