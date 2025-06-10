@@ -345,10 +345,10 @@ function getDefaultTime(activityType: SeaTrip['type']): string {
 
 function getDefaultSchedule(activityType: SeaTrip['type']): { departure: string, estimatedReturn: string } {
   const scheduleMap: Record<SeaTrip['type'], { departure: string, estimatedReturn: string }> = {
-    'morningTraining': { departure: '05:30', estimatedReturn: '18:00' },
-    'training': { departure: '07:30', estimatedReturn: '19:00' },
-    'trainingrace': { departure: '06:30', estimatedReturn: '20:00' },
-    'race': { departure: '18:00', estimatedReturn: '22:00' },
+    'morningTraining': { departure: '06:00', estimatedReturn: '09:00' },
+    'training': { departure: '19:00', estimatedReturn: '22:00' },
+    'trainingrace': { departure: '18:30', estimatedReturn: '22:00' },
+    'race': { departure: '10:00', estimatedReturn: '18:00' },
     'trip': { departure: '08:30', estimatedReturn: '18:30' },
     'commercial': { departure: '06:30', estimatedReturn: '17:30' },
     'ladoga': { departure: '05:00', estimatedReturn: '20:00' }
