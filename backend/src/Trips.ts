@@ -161,6 +161,7 @@ async function parseCsv(csvText: string): Promise<ActivityRegistration[]> {
     // Если в ячейке есть месяц - обновляем текущий месяц
     if (monthCell) {
       currentMonth = monthCell
+      if (currentMonth === 'май') continue
       console.log(`Found month: "${currentMonth}" at column ${colIndex}`)
     }
     
