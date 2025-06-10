@@ -124,8 +124,15 @@ const TelegramCrewApp: React.FC = () => {
     return days;
   };
 
+  const getCurrentDate = () => {
+    const today = new Date();
+    return formatDate(today.getFullYear(), today.getMonth(), today.getDate());
+  };
+
   const formatDate = (year: number, month: number, day: number) => {
-    return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return `${year}-${String(month + 1).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
   };
 
   const getTripsForDate = (dateString: string) => {
@@ -239,8 +246,8 @@ const TelegramCrewApp: React.FC = () => {
               </div>
             ))}
           </div>
-
           {/* Дни месяца */}
+          // Дни месяца
           <div className="grid grid-cols-7 gap-1">
             {days.map((day, index) => {
               if (day === null) {
@@ -250,6 +257,7 @@ const TelegramCrewApp: React.FC = () => {
               const dateString = formatDate(year, month, day);
               const trips = getTripsForDate(dateString);
               const isSelected = selectedDate === dateString;
+              const isToday = dateString === getCurrentDate();
 
               return (
                 <button
@@ -257,13 +265,22 @@ const TelegramCrewApp: React.FC = () => {
                   onClick={() => setSelectedDate(dateString)}
                   className={`
                     relative p-2 text-center rounded-lg transition-colors
-                    ${isSelected ? "bg-blue-600 text-white" : "hover:bg-gray-100"}
+                    ${
+                      isSelected
+                        ? "bg-blue-600 text-white"
+                        : isToday
+                        ? "bg-green-100 text-green-800 font-bold border-2 border-green-500"
+                        : "hover:bg-gray-100"
+                    }
                     ${trips.length > 0 ? "font-bold" : ""}
                   `}
                 >
                   {day}
                   {trips.length > 0 && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
+                  )}
+                  {isToday && !isSelected && (
+                    <div className="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full"></div>
                   )}
                 </button>
               );
