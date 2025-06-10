@@ -247,7 +247,7 @@ const TelegramCrewApp: React.FC = () => {
             ))}
           </div>
           {/* Дни месяца */}
-          // Дни месяца
+    
           <div className="grid grid-cols-7 gap-1">
             {days.map((day, index) => {
               if (day === null) {
@@ -264,23 +264,23 @@ const TelegramCrewApp: React.FC = () => {
                   key={day}
                   onClick={() => setSelectedDate(dateString)}
                   className={`
-                    relative p-2 text-center rounded-lg transition-colors
-                    ${
-                      isSelected
-                        ? "bg-blue-600 text-white"
-                        : isToday
-                        ? "bg-green-100 text-green-800 font-bold border-2 border-green-500"
-                        : "hover:bg-gray-100"
-                    }
-                    ${trips.length > 0 ? "font-bold" : ""}
-                  `}
+          relative p-2 text-center rounded-lg transition-colors
+          ${
+            isSelected
+              ? "bg-blue-600 text-white"
+              : isToday
+              ? "bg-gray-100 text-gray-800 font-bold border border-gray-300"
+              : "hover:bg-gray-100"
+          }
+          ${trips.length > 0 ? "font-bold" : ""}
+        `}
                 >
                   {day}
                   {trips.length > 0 && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
                   )}
                   {isToday && !isSelected && (
-                    <div className="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div className="absolute top-0 right-0 w-2 h-2 bg-gray-400 rounded-full"></div>
                   )}
                 </button>
               );
