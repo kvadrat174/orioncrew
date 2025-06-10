@@ -125,9 +125,7 @@ const TelegramCrewApp: React.FC = () => {
   };
 
   const formatDate = (year: number, month: number, day: number) => {
-    return `${year}-${String(month + 1).padStart(2, "0")}-${String(
-      day
-    ).padStart(2, "0")}`;
+    return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   };
 
   const getTripsForDate = (dateString: string) => {
@@ -246,7 +244,7 @@ const TelegramCrewApp: React.FC = () => {
           <div className="grid grid-cols-7 gap-1">
             {days.map((day, index) => {
               if (day === null) {
-                return <div key={index} className="p-2"></div>;
+                return <div key={`empty-${index}`} className="p-2"></div>;
               }
 
               const dateString = formatDate(year, month, day);
@@ -259,16 +257,12 @@ const TelegramCrewApp: React.FC = () => {
                   onClick={() => setSelectedDate(dateString)}
                   className={`
                     relative p-2 text-center rounded-lg transition-colors
-                    ${
-                      isSelected
-                        ? "bg-blue-600 text-white"
-                        : "hover:bg-gray-100"
-                    }
-                    ${trips ? "font-bold" : ""}
+                    ${isSelected ? "bg-blue-600 text-white" : "hover:bg-gray-100"}
+                    ${trips.length > 0 ? "font-bold" : ""}
                   `}
                 >
                   {day}
-                  {trips.length && (
+                  {trips.length > 0 && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
                   )}
                 </button>
