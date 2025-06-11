@@ -52,7 +52,7 @@ declare global {
   }
 }
 
-const CAPTAIN_ID = 123456; // Замените на реальный ID капитана
+const CAPTAIN_ID = 715698611; // Замените на реальный ID капитана
 
 const TelegramCrewApp: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
