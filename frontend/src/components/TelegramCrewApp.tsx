@@ -12,6 +12,7 @@ import {
 import WebApp from "@twa-dev/sdk";
 import type { TgUser } from "../types/telegram";
 import axios from "axios";
+import { participantsMap } from "../constants";
 
 const BASE_URL = "https://crew.mysailing.ru/api"
 // const BASE_URL = "http://localhost:3500"
@@ -224,7 +225,8 @@ const TelegramCrewApp: React.FC = () => {
   const isCaptain = tgUser?.id === CAPTAIN_ID;
   const isUserInTrip = (trip: SeaTrip) => {
     if (!tgUser) return false;
-    return trip.crew.some((member) => member.tgId === tgUser.id);
+    const participant: string = participantsMap[String(tgUser.id)]
+    return trip.crew.some((member) => member.name === participant);
   };
 
   const days = getDaysInMonth(currentMonth);
