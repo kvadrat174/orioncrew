@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { node } from "@elysiajs/node";
 import { telegramBotWebhook } from "./tg/webhook";
 import TelegramBot from "./tg/TelegramBot";
@@ -68,6 +68,34 @@ const create = async () => {
         count: filteredTrips.length
       };
     })
+    .post("/trips/join", async ({ body: { userId, tripId } }) => {
+        await tripsService.updateParticipant(userId, tripId, '1')
+        const trips = tripsService.getTrips();
+        return trips;
+    },
+    {
+        body: t.Object({
+          userId: t.String({ maxLength: 64 }),
+          tripId: t.String()
+        }),
+        response: t.Any(),
+        detail: { tags: ['Season2'] },
+      },
+    )
+    .post("/trips/leave", async ({ body: { userId, tripId } }) => {
+        await tripsService.updateParticipant(userId, tripId, '')
+        const trips = tripsService.getTrips();
+        return trips;
+    },
+    {
+        body: t.Object({
+          userId: t.String({ maxLength: 64 }),
+          tripId: t.String()
+        }),
+        response: t.Any(),
+        detail: { tags: ['Season2'] },
+      },
+    )
     
     // Получить статистику по поездкам
     .get("/trips/stats", () => {
@@ -122,7 +150,6 @@ const create = async () => {
       }
     })
     
-    // Статус сервиса
     .get("/trips/status", () => {
       const trips = tripsService.getTrips();
       const lastUpdated = tripsService.getLastUpdated();
