@@ -89,6 +89,17 @@ const TelegramCrewApp: React.FC = () => {
     }
   }, [seaTrips]);
 
+  useEffect(() => {
+    // Первоначальная загрузка данных
+    fetchTrips();
+  
+    // Установка интервала для обновления каждые 30 секунд
+    const intervalId = setInterval(fetchTrips, 30000); // 30000 мс = 30 секунд
+  
+    // Очистка интервала при размонтировании компонента
+    return () => clearInterval(intervalId);
+  }, []);
+
   const fetchTrips = async () => {
     try {
       setLoading(true);
