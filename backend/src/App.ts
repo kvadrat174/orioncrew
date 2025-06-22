@@ -3,6 +3,7 @@ import { node } from "@elysiajs/node";
 import { telegramBotWebhook } from "./tg/webhook";
 import TelegramBot from "./tg/TelegramBot";
 import TripsService from "./Trips";
+import { cors } from "@elysiajs/cors";
 
 const PORT = 3500;
 const HOSTNAME = "127.0.0.1";
@@ -12,6 +13,7 @@ const create = async () => {
   const tripsService = await TripsService.create();
 
   const app = new Elysia({ adapter: node() })
+    .use(cors())
     .use(telegramBotWebhook(tgBot.bot, process.env.BOT_TOKEN))
     
     // Основной эндпоинт для получения всех поездок
