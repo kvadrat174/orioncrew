@@ -52,7 +52,7 @@ declare global {
   }
 }
 
-const CAPTAIN_ID = 253265788; // Замените на реальный ID капитана
+const CAPTAIN_ID = 715698611; // Замените на реальный ID капитана
 
 const TelegramCrewApp: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -142,6 +142,8 @@ const TelegramCrewApp: React.FC = () => {
       if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.showAlert("Произошла ошибка. Попробуйте позже.");
       }
+    } finally {
+      setActionLoading({ tripId: null, memberId: null });
     }
   };
 
@@ -437,7 +439,6 @@ const TelegramCrewApp: React.FC = () => {
                           </div>
                         </div>
 
-                        Кнопки управления для капитана
                         {isCaptain && (
                           <div className="flex space-x-1">
                             <button
