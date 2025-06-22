@@ -6,6 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+src/curious-sandbox-298011-8f68322ffc7b.json
 
 node_modules
 dist

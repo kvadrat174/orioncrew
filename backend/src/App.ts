@@ -1,8 +1,9 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { node } from "@elysiajs/node";
 import { telegramBotWebhook } from "./tg/webhook";
 import TelegramBot from "./tg/TelegramBot";
 import TripsService from "./Trips";
+import { cors } from "@elysiajs/cors";
 
 const PORT = 3500;
 const HOSTNAME = "127.0.0.1";
@@ -12,6 +13,7 @@ const create = async () => {
   const tripsService = await TripsService.create();
 
   const app = new Elysia({ adapter: node() })
+    .use(cors())
     .use(telegramBotWebhook(tgBot.bot, process.env.BOT_TOKEN))
     
     // Основной эндпоинт для получения всех поездок
@@ -68,6 +70,34 @@ const create = async () => {
         count: filteredTrips.length
       };
     })
+    .post("/trips/join", async ({ body: { userId, tripId } }) => {
+        await tripsService.updateParticipant(userId, tripId, '1')
+        const trips = tripsService.getTrips();
+        return trips;
+    },
+    {
+        body: t.Object({
+          userId: t.String({ maxLength: 64 }),
+          tripId: t.String()
+        }),
+        response: t.Any(),
+        detail: { tags: ['Season2'] },
+      },
+    )
+    .post("/trips/leave", async ({ body: { userId, tripId } }) => {
+        await tripsService.updateParticipant(userId, tripId, '')
+        const trips = tripsService.getTrips();
+        return trips;
+    },
+    {
+        body: t.Object({
+          userId: t.String({ maxLength: 64 }),
+          tripId: t.String()
+        }),
+        response: t.Any(),
+        detail: { tags: ['Season2'] },
+      },
+    )
     
     // Получить статистику по поездкам
     .get("/trips/stats", () => {
@@ -122,7 +152,6 @@ const create = async () => {
       }
     })
     
-    // Статус сервиса
     .get("/trips/status", () => {
       const trips = tripsService.getTrips();
       const lastUpdated = tripsService.getLastUpdated();
