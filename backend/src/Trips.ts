@@ -1,7 +1,7 @@
 import schedule from "node-schedule";
 import { getColumnLetter, getSheetData, updateCell } from "./google";
 import { randomUUID } from "crypto";
-import { SHEET_ID, SHEET_NAME, participantsMap } from "./constants";
+import { SHEET_ID, SHEET_NAME, invertedParticipantsMap, participantsMap } from "./constants";
 
 export type TripsService = Awaited<ReturnType<typeof create>>;
 
@@ -302,7 +302,7 @@ function transformToSeaTrips(registrations: ActivityRegistration[]): SeaTrip[] {
 
     // Создаем экипаж из участников
     const crew: CrewMember[] = registration.participants.map((name) => ({
-      id: memberId++,
+      id: invertedParticipantsMap[name],
       name: name,
       position: name === "Курочкина Ольга" ? "Боцман" : "Матрос", // можно добавить логику определения должности
       experience: "Не указан", // можно добавить логику определения опыта

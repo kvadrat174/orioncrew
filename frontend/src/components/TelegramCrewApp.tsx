@@ -120,22 +120,23 @@ const TelegramCrewApp: React.FC = () => {
     setActionLoading({ tripId, memberId: memberId || null });
 
     try {
+      let response
       if (action === "add") {
-        await axios.post(`${BASE_URL}/trips/join`, {
-          tripId: tgUser.id,
+        response = await axios.post(`${BASE_URL}/trips/join`, {
+          tripId: tripId,
           userId: tgUser.id,
         });
       } else {
-        await axios.post(
+        response = await axios.post(
           `${BASE_URL}/trips/leave`,
           {
-            tripId: tgUser.id,
+            tripId: tripId,
             userId: tgUser.id,
           }
         );
       }
 
-      await fetchTrips();
+      setSeaTrips(response.data);
     } catch (error) {
       console.error("Ошибка при изменении состава экипажа:", error);
       if (window.Telegram?.WebApp) {
@@ -438,7 +439,7 @@ const TelegramCrewApp: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Кнопки управления для капитана
+                        Кнопки управления для капитана
                         {isCaptain && (
                           <div className="flex space-x-1">
                             <button
@@ -460,7 +461,7 @@ const TelegramCrewApp: React.FC = () => {
                               )}
                             </button>
                           </div>
-                        )} */}
+                        )}
                       </div>
                     ))}
                   </div>
