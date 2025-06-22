@@ -12,7 +12,7 @@ type TActivityMapWithParticipants = Map<
 >;
 
 interface CrewMember {
-  id: number;
+  id: string;
   name: string;
   position: string;
   phone?: string;

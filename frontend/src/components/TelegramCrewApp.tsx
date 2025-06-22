@@ -12,13 +12,12 @@ import {
 import WebApp from "@twa-dev/sdk";
 import type { TgUser } from "../types/telegram";
 import axios from "axios";
-import { participantsMap } from "../constants";
 
 const BASE_URL = "https://crew.mysailing.ru/api"
 // const BASE_URL = "http://localhost:3500"
 
 interface CrewMember {
-  id: number;
+  id: string;
   name: string;
   position: string;
   phone?: string;
@@ -62,7 +61,7 @@ const TelegramCrewApp: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<{
     tripId: string | null;
-    memberId: number | null;
+    memberId: string | null;
   }>({ tripId: null, memberId: null });
 
   useEffect(() => {
@@ -89,17 +88,6 @@ const TelegramCrewApp: React.FC = () => {
     }
   }, [seaTrips]);
 
-  useEffect(() => {
-    // Первоначальная загрузка данных
-    fetchTrips();
-  
-    // Установка интервала для обновления каждые 30 секунд
-    const intervalId = setInterval(fetchTrips, 30000); // 30000 мс = 30 секунд
-  
-    // Очистка интервала при размонтировании компонента
-    return () => clearInterval(intervalId);
-  }, []);
-
   const fetchTrips = async () => {
     try {
       setLoading(true);
@@ -124,7 +112,7 @@ const TelegramCrewApp: React.FC = () => {
   const handleCrewAction = async (
     tripId: string,
     action: "add" | "remove",
-    memberId?: number
+    memberId?: string
   ) => {
     if (!tgUser) return;
 
@@ -135,14 +123,14 @@ const TelegramCrewApp: React.FC = () => {
       if (action === "add") {
         response = await axios.post(`${BASE_URL}/trips/join`, {
           tripId: tripId,
-          userId: String(tgUser.id),
+          userId: String(memberId),
         });
       } else {
         response = await axios.post(
           `${BASE_URL}/trips/leave`,
           {
             tripId: tripId,
-            userId: String(tgUser.id),
+            userId: String(memberId),
           }
         );
       }
@@ -237,8 +225,8 @@ const TelegramCrewApp: React.FC = () => {
   const isCaptain = tgUser?.id === CAPTAIN_ID;
   const isUserInTrip = (trip: SeaTrip) => {
     if (!tgUser) return false;
-    const participant: string = participantsMap[String(tgUser.id)]
-    return trip.crew.some((member) => member.name === participant);
+
+    return trip.crew.some((member) => member.id === String(tgUser.id));
   };
 
   const days = getDaysInMonth(currentMonth);
@@ -387,12 +375,13 @@ const TelegramCrewApp: React.FC = () => {
                       </span>
 
                       {/* Кнопки записи/выписки для обычных пользователей */}
-                      {!isCaptain && (
+                      {!isCaptain && tgUser && (
                         <button
                           onClick={() =>
                             handleCrewAction(
                               trip.id,
-                              isUserInTrip(trip) ? "remove" : "add"
+                              isUserInTrip(trip) ? "remove" : "add",
+                              String(tgUser.id)
                             )
                           }
                           disabled={
