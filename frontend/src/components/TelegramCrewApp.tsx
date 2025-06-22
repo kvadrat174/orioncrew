@@ -52,7 +52,7 @@ declare global {
   }
 }
 
-const CAPTAIN_ID = 715698611; // Замените на реальный ID капитана
+const CAPTAIN_ID = 253265788; // Замените на реальный ID капитана
 
 const TelegramCrewApp: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -124,14 +124,14 @@ const TelegramCrewApp: React.FC = () => {
       if (action === "add") {
         response = await axios.post(`${BASE_URL}/trips/join`, {
           tripId: tripId,
-          userId: tgUser.id,
+          userId: String(tgUser.id),
         });
       } else {
         response = await axios.post(
           `${BASE_URL}/trips/leave`,
           {
             tripId: tripId,
-            userId: tgUser.id,
+            userId: String(tgUser.id),
           }
         );
       }
@@ -142,8 +142,6 @@ const TelegramCrewApp: React.FC = () => {
       if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.showAlert("Произошла ошибка. Попробуйте позже.");
       }
-    } finally {
-      setActionLoading({ tripId: null, memberId: null });
     }
   };
 
