@@ -4,8 +4,6 @@ import {
   Users,
   Ship,
   Clock,
-  Phone,
-  MapPin,
   User,
   Check,
   X,
@@ -14,6 +12,9 @@ import {
 import WebApp from "@twa-dev/sdk";
 import type { TgUser } from "../types/telegram";
 import axios from "axios";
+
+const BASE_URL = "https://crew.mysailing.ru/api"
+// const BASE_URL = "http://localhost:3500"
 
 interface CrewMember {
   id: number;
@@ -25,23 +26,21 @@ interface CrewMember {
 }
 
 interface SeaTrip {
+  id: string;
   type:
     | "morningTraining"
     | "training"
-    | "trainingrace"
+    | "trainingRace"
     | "race"
     | "trip"
     | "commercial"
     | "ladoga";
   date: string;
-  time: string;
   crew: CrewMember[];
-  vessel: string;
-  departure: string;
-  estimatedReturn: string;
-  destination: string;
-  status: "planned" | "active" | "completed";
-  id: number;
+  vessel: string; // судно
+  departure: string; // отправление
+  duration: string; // длительность
+  status: "planned" | "active" | "completed" | "canceled";
 }
 
 declare global {
@@ -61,7 +60,7 @@ const TelegramCrewApp: React.FC = () => {
   const [tgUser, setTgUser] = useState<TgUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<{
-    tripId: number | null;
+    tripId: string | null;
     memberId: number | null;
   }>({ tripId: null, memberId: null });
 
@@ -93,7 +92,7 @@ const TelegramCrewApp: React.FC = () => {
     try {
       setLoading(true);
       const response = await axios.get<SeaTrip[]>(
-        "https://crew.mysailing.ru/api/trips"
+        `${BASE_URL}/trips`
       );
       setSeaTrips(response.data);
     } catch (error) {
@@ -111,24 +110,28 @@ const TelegramCrewApp: React.FC = () => {
   }, []);
 
   const handleCrewAction = async (
-    tripId: number,
+    tripId: string,
     action: "add" | "remove",
     memberId?: number
   ) => {
     if (!tgUser) return;
 
     setActionLoading({ tripId, memberId: memberId || null });
-    
+
     try {
       if (action === "add") {
-        await axios.post(`https://crew.mysailing.ru/api/trips/${tripId}/join`, {
-          tgId: tgUser.id,
-          name: `${tgUser.first_name} ${tgUser.last_name || ""}`.trim(),
+        await axios.post(`${BASE_URL}/trips/join`, {
+          tripId: tgUser.id,
+          userId: tgUser.id,
         });
       } else {
-        await axios.post(`https://crew.mysailing.ru/api/trips/${tripId}/leave`, {
-          memberId: memberId || tgUser.id,
-        });
+        await axios.post(
+          `${BASE_URL}/trips/leave`,
+          {
+            tripId: tgUser.id,
+            userId: tgUser.id,
+          }
+        );
       }
 
       await fetchTrips();
@@ -148,10 +151,14 @@ const TelegramCrewApp: React.FC = () => {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+    let startingDayOfWeek = firstDay.getDay();
+
+    // Преобразование порядка дней недели чтобы понедельник был = 0, а воскресенье = 6
+    startingDayOfWeek = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
 
     const days = [];
 
+    // Добавление пустых ячеек для дней предыдущего месяца
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
@@ -186,6 +193,8 @@ const TelegramCrewApp: React.FC = () => {
         return "bg-green-100 text-green-800";
       case "completed":
         return "bg-gray-100 text-gray-800";
+      case "canceled":
+        return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -197,7 +206,7 @@ const TelegramCrewApp: React.FC = () => {
         return "Утренняя тренировка";
       case "training":
         return "Тренировка";
-      case "trainingrace":
+      case "trainingRace":
         return "Тренировочная гонка";
       case "race":
         return "Гонка";
@@ -238,7 +247,7 @@ const TelegramCrewApp: React.FC = () => {
     "Декабрь",
   ];
 
-  const weekDays = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+  const weekDays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -255,7 +264,9 @@ const TelegramCrewApp: React.FC = () => {
                 <User className="w-4 h-4" />
                 <span>{tgUser.first_name}</span>
                 {isCaptain && (
-                  <span className="text-xs bg-yellow-500 px-1 rounded">Капитан</span>
+                  <span className="text-xs bg-yellow-500 px-1 rounded">
+                    Капитан
+                  </span>
                 )}
               </div>
             )}
@@ -294,7 +305,7 @@ const TelegramCrewApp: React.FC = () => {
               </div>
             ))}
           </div>
-          
+
           {/* Дни месяца */}
           <div className="grid grid-cols-7 gap-1">
             {days.map((day, index) => {
@@ -355,12 +366,12 @@ const TelegramCrewApp: React.FC = () => {
                     <div className="flex items-center">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          trip.type
+                          trip.status
                         )}`}
                       >
                         {getTypeText(trip.type)}
                       </span>
-                      
+
                       {/* Кнопки записи/выписки для обычных пользователей */}
                       {!isCaptain && (
                         <button
@@ -397,13 +408,8 @@ const TelegramCrewApp: React.FC = () => {
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-2" />
                       <span>
-                        Выход: {trip.departure} - {trip.time} | Возвращение:{" "}
-                        {trip.estimatedReturn}
+                        Выход: {trip.departure}
                       </span>
-                    </div>
-                    <div className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      <span>{trip.destination}</span>
                     </div>
                   </div>
                 </div>
@@ -428,23 +434,9 @@ const TelegramCrewApp: React.FC = () => {
                           <div className="text-sm text-blue-600 font-medium">
                             {member.position}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            Опыт: {member.experience}
-                          </div>
-                          {member.phone && (
-                            <div className="flex items-center text-sm text-gray-600 mt-1">
-                              <Phone className="w-3 h-3 mr-1" />
-                              <a
-                                href={`tel:${member.phone}`}
-                                className="hover:text-blue-600"
-                              >
-                                {member.phone}
-                              </a>
-                            </div>
-                          )}
                         </div>
-                        
-                        {/* Кнопки управления для капитана */}
+
+                        {/* Кнопки управления для капитана
                         {isCaptain && (
                           <div className="flex space-x-1">
                             <button
@@ -466,7 +458,7 @@ const TelegramCrewApp: React.FC = () => {
                               )}
                             </button>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     ))}
                   </div>
