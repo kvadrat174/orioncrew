@@ -5,7 +5,6 @@ import {
   Ship,
   Clock,
   User,
-  Check,
   X,
   Loader2,
 } from "lucide-react";
@@ -13,7 +12,7 @@ import WebApp from "@twa-dev/sdk";
 import type { TgUser } from "../types/telegram";
 import axios from "axios";
 
-const BASE_URL = "https://crew.mysailing.ru/api"
+const BASE_URL = "https://crew.mysailing.ru/api";
 // const BASE_URL = "http://localhost:3500"
 
 interface CrewMember {
@@ -51,7 +50,7 @@ declare global {
   }
 }
 
-const CAPTAIN_ID = 715698611; // Замените на реальный ID капитана
+const CAPTAIN_ID = 253265788; // Замените на реальный ID капитана
 
 const TelegramCrewApp: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -91,9 +90,7 @@ const TelegramCrewApp: React.FC = () => {
   const fetchTrips = async () => {
     try {
       setLoading(true);
-      const response = await axios.get<SeaTrip[]>(
-        `${BASE_URL}/trips`
-      );
+      const response = await axios.get<SeaTrip[]>(`${BASE_URL}/trips`);
       setSeaTrips(response.data);
     } catch (error) {
       console.error("Ошибка при загрузке данных о рейсах:", error);
@@ -113,29 +110,26 @@ const TelegramCrewApp: React.FC = () => {
     tripId: string,
     action: "add" | "remove",
     memberId?: string,
-    byCaptain = false,
+    byCaptain = false
   ) => {
     if (!tgUser) return;
 
     setActionLoading({ tripId, memberId: memberId || null });
 
     try {
-      let response
+      let response;
       if (action === "add") {
         response = await axios.post(`${BASE_URL}/trips/join`, {
           tripId: tripId,
           userId: String(memberId),
-          byCaptain
+          byCaptain,
         });
       } else {
-        response = await axios.post(
-          `${BASE_URL}/trips/leave`,
-          {
-            tripId: tripId,
-            userId: String(memberId),
-            byCaptain
-          }
-        );
+        response = await axios.post(`${BASE_URL}/trips/leave`, {
+          tripId: tripId,
+          userId: String(memberId),
+          byCaptain,
+        });
       }
 
       setSeaTrips(response.data);
@@ -391,7 +385,7 @@ const TelegramCrewApp: React.FC = () => {
                             actionLoading.tripId === trip.id &&
                             actionLoading.memberId === null
                           }
-                          className={`ml-2 p-1 rounded-full ${
+                          className={`ml-2 px-3 py-1 rounded-md text-sm font-medium ${
                             isUserInTrip(trip)
                               ? "bg-red-100 text-red-600 hover:bg-red-200"
                               : "bg-green-100 text-green-600 hover:bg-green-200"
@@ -399,11 +393,11 @@ const TelegramCrewApp: React.FC = () => {
                         >
                           {actionLoading.tripId === trip.id &&
                           actionLoading.memberId === null ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin inline" />
                           ) : isUserInTrip(trip) ? (
-                            <X className="w-4 h-4" />
+                            "Отменить запись"
                           ) : (
-                            <Check className="w-4 h-4" />
+                            "Записаться"
                           )}
                         </button>
                       )}
@@ -413,9 +407,7 @@ const TelegramCrewApp: React.FC = () => {
                   <div className="space-y-2 text-sm text-gray-600">
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-2" />
-                      <span>
-                        Выход: {trip.departure}
-                      </span>
+                      <span>Выход: {trip.departure}</span>
                     </div>
                   </div>
                 </div>
@@ -446,7 +438,12 @@ const TelegramCrewApp: React.FC = () => {
                           <div className="flex space-x-1">
                             <button
                               onClick={() =>
-                                handleCrewAction(trip.id, "remove", member.id, true)
+                                handleCrewAction(
+                                  trip.id,
+                                  "remove",
+                                  member.id,
+                                  true
+                                )
                               }
                               disabled={
                                 actionLoading.tripId === trip.id &&
