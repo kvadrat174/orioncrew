@@ -4,6 +4,7 @@ import { telegramBotWebhook } from "./tg/webhook";
 import TelegramBot from "./tg/TelegramBot";
 import TripsService from "./Trips";
 import { cors } from "@elysiajs/cors";
+import { getTypeText } from "./helpers";
 
 const PORT = 3500;
 const HOSTNAME = "127.0.0.1";
@@ -71,28 +72,33 @@ const create = async () => {
       };
     })
     .post("/trips/join", async ({ body: { userId, tripId } }) => {
-        await tripsService.updateParticipant(userId, tripId, '1')
+        const response = await tripsService.updateParticipant(userId, tripId, '1')
         const trips = tripsService.getTrips();
+        await tgBot.bot.api.sendMessage(userId, `Вы записались на ${getTypeText(response.type)} - ${response.date}`)
         return trips;
     },
     {
         body: t.Object({
           userId: t.String({ maxLength: 64 }),
-          tripId: t.String()
+          tripId: t.String(),
+          byCaptain: t.Boolean()
         }),
         response: t.Any(),
         detail: { tags: ['Season2'] },
       },
     )
     .post("/trips/leave", async ({ body: { userId, tripId } }) => {
-        await tripsService.updateParticipant(userId, tripId, '')
+        const response = await tripsService.updateParticipant(userId, tripId, '')
         const trips = tripsService.getTrips();
+
+        await tgBot.bot.api.sendMessage(userId, `Вы были выписаны с ${getTypeText(response.type)} - ${response.date}`)
         return trips;
     },
     {
         body: t.Object({
           userId: t.String({ maxLength: 64 }),
-          tripId: t.String()
+          tripId: t.String(),
+          byCaptain: t.Boolean()
         }),
         response: t.Any(),
         detail: { tags: ['Season2'] },

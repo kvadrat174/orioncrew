@@ -112,7 +112,8 @@ const TelegramCrewApp: React.FC = () => {
   const handleCrewAction = async (
     tripId: string,
     action: "add" | "remove",
-    memberId?: string
+    memberId?: string,
+    byCaptain = false,
   ) => {
     if (!tgUser) return;
 
@@ -124,6 +125,7 @@ const TelegramCrewApp: React.FC = () => {
         response = await axios.post(`${BASE_URL}/trips/join`, {
           tripId: tripId,
           userId: String(memberId),
+          byCaptain
         });
       } else {
         response = await axios.post(
@@ -131,6 +133,7 @@ const TelegramCrewApp: React.FC = () => {
           {
             tripId: tripId,
             userId: String(memberId),
+            byCaptain
           }
         );
       }
@@ -443,7 +446,7 @@ const TelegramCrewApp: React.FC = () => {
                           <div className="flex space-x-1">
                             <button
                               onClick={() =>
-                                handleCrewAction(trip.id, "remove", member.id)
+                                handleCrewAction(trip.id, "remove", member.id, true)
                               }
                               disabled={
                                 actionLoading.tripId === trip.id &&

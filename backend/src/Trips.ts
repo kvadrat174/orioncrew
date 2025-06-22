@@ -24,7 +24,7 @@ export interface SeaTrip {
   type:
     | "morningTraining"
     | "training"
-    | "trainingrace"
+    | "trainingRace"
     | "race"
     | "trip"
     | "commercial"
@@ -332,7 +332,7 @@ function mapActivityType(csvType: string): SeaTrip["type"] | null {
   const typeMap: Record<string, SeaTrip["type"]> = {
     УТ: "morningTraining",
     Т: "training",
-    ТГ: "trainingrace",
+    ТГ: "trainingRace",
     Г: "race",
     П: "trip",
     К: "commercial",
@@ -352,7 +352,7 @@ function getDefaultDuration(activityType: SeaTrip["type"]): string {
   const timeMap: Record<SeaTrip["type"], string> = {
     morningTraining: "3ч",
     training: "3ч",
-    trainingrace: "5ч",
+    trainingRace: "5ч",
     race: "5ч",
     trip: "3д",
     commercial: "3ч",
@@ -371,7 +371,7 @@ function getDefaultSchedule(activityType: SeaTrip["type"]): {
   > = {
     morningTraining: { departure: "06:00" },
     training: { departure: "19:00" },
-    trainingrace: { departure: "18:30" },
+    trainingRace: { departure: "18:30" },
     race: { departure: "10:00" },
     trip: { departure: "08:30" },
     commercial: { departure: "06:30" },
@@ -381,7 +381,7 @@ function getDefaultSchedule(activityType: SeaTrip["type"]): {
   return scheduleMap[activityType];
 }
 
-async function updateParticipant(userId: string, tripId: string, value: string) {
+async function updateParticipant(userId: string, tripId: string, value: string, captain = false) {
   const rawRows: string[][] = await getSheetData();
   const participantName: string = participantsMap[userId];
   let participantRowIndex = -1;
@@ -405,6 +405,8 @@ async function updateParticipant(userId: string, tripId: string, value: string) 
   try {
     await updateCell(SHEET_ID, range, value);
     await updateTrips();
+    return currentTrips.find((trip) => trip.id === tripId)
+
   } catch (error) {
     console.error(`Failed to update cell ${range} with UUID:`, error);
   }
