@@ -76,6 +76,14 @@ const create = async (token: string) => {
     })
   })
 
+  bot.command('get_webapp_links', async ctx => {
+    const redirectProxy = 'https://wow.thememebox.io/redirect-localhost'
+    ctx.reply(`👇 WebApp localhost links`, {
+      reply_markup: InlineKeyboard.from([
+        [InlineKeyboard.webApp(`Redirect to http://localhost:3300`, `${redirectProxy}/3300`)],
+      ]),
+    })
+  })
 
   bot.command('disable_lang_buttons', async ctx => {
     ctx.reply(`Disabled lang buttons`).then(() => {
