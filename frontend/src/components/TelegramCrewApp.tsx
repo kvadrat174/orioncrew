@@ -23,8 +23,8 @@ import {
 import { CAPTAIN_ID, monthNames, weekDays } from "../utils/constants";
 import type { SeaTrip } from "../interfaces/inrefaces";
 
-// const BASE_URL = "https://crew.mysailing.ru/api";
-const BASE_URL = "http://localhost:3500";
+const BASE_URL = "https://crew.mysailing.ru/api";
+// const BASE_URL = "http://localhost:3500";
 
 declare global {
   interface Window {
