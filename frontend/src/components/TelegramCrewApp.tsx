@@ -1,29 +1,21 @@
 import React, { useState, useEffect } from "react";
-import {
-  Calendar,
-  Users,
-  Ship,
-  Clock,
-  User,
-  X,
-  Loader2,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Ship } from "lucide-react";
 import WebApp from "@twa-dev/sdk";
 import type { TgUser } from "../types/telegram";
 import axios from "axios";
-import {
-  formatDate,
-  getCurrentDate,
-  getDaysInMonth,
-  getStatusColor,
-  getTypeText,
-} from "../utils/utils";
-import { CAPTAIN_ID, monthNames, weekDays } from "../utils/constants";
+import { getDaysInMonth } from "../utils/utils";
+import { CAPTAIN_ID } from "../utils/constants";
 import type { SeaTrip } from "../interfaces/inrefaces";
+import UserBadge from "./UserBadge";
+import CalendarHeader from "./CalendarHeader";
+import CalendarGrid from "./CalendarGrid";
+import LoadingSpinner from "./LoadingSpinner";
+import TripCard from "./TripCard";
+import EmptyState from "./EmptyState";
 
+// для пуша в гит
 const BASE_URL = "https://crew.mysailing.ru/api";
+// для разработки фронта
 // const BASE_URL = "http://localhost:3500";
 
 declare global {
@@ -89,6 +81,18 @@ const TelegramCrewApp: React.FC = () => {
     fetchTrips();
   }, []);
 
+  const handlePrevMonth = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    setCurrentMonth(new Date(year, month - 1));
+  };
+
+  const handleNextMonth = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    setCurrentMonth(new Date(year, month + 1));
+  };
+
   const toggleCrewExpanded = (tripId: string) => {
     setExpandedCrew((prev) => {
       const newSet = new Set(prev);
@@ -150,8 +154,6 @@ const TelegramCrewApp: React.FC = () => {
   };
 
   const days = getDaysInMonth(currentMonth);
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth();
   const selectedTrips = selectedDate ? getTripsForDate(selectedDate) : null;
 
   return (
@@ -164,238 +166,51 @@ const TelegramCrewApp: React.FC = () => {
               <Ship className="w-6 h-6" />
               <h1 className="text-xl font-bold">Календарь экипажа</h1>
             </div>
-            {tgUser && (
-              <div className="flex items-center space-x-2 text-sm">
-                <User className="w-4 h-4" />
-                <span>{tgUser.first_name}</span>
-                {isCaptain && (
-                  <span className="text-xs bg-yellow-500 px-1 rounded">
-                    Капитан
-                  </span>
-                )}
-              </div>
-            )}
+            {tgUser && <UserBadge tgUser={tgUser} isCaptain={isCaptain} />}
           </div>
         </div>
 
         {/* Навигация по месяцам */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <button
-            onClick={() => setCurrentMonth(new Date(year, month - 1))}
-            className="p-2 rounded-lg hover:bg-gray-100"
-          >
-            ←
-          </button>
-          <h2 className="text-lg font-semibold">
-            {monthNames[month]} {year}
-          </h2>
-          <button
-            onClick={() => setCurrentMonth(new Date(year, month + 1))}
-            className="p-2 rounded-lg hover:bg-gray-100"
-          >
-            →
-          </button>
-        </div>
+        <CalendarHeader
+          currentMonth={currentMonth}
+          onPrevMonth={handlePrevMonth}
+          onNextMonth={handleNextMonth}
+        />
 
         {/* Календарь */}
-        <div className="p-4">
-          {/* Дни недели */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {weekDays.map((day) => (
-              <div
-                key={day}
-                className="text-center text-sm font-medium text-gray-500 p-2"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* Дни месяца */}
-          <div className="grid grid-cols-7 gap-1">
-            {days.map((day, index) => {
-              if (day === null) {
-                return <div key={`empty-${index}`} className="p-2"></div>;
-              }
-
-              const dateString = formatDate(year, month, day);
-              const trips = getTripsForDate(dateString);
-              const isSelected = selectedDate === dateString;
-              const isToday = dateString === getCurrentDate();
-
-              return (
-                <button
-                  key={day}
-                  onClick={() => setSelectedDate(dateString)}
-                  className={`
-                    relative p-2 text-center rounded-lg transition-colors
-                    ${
-                      isSelected
-                        ? "bg-blue-600 text-white"
-                        : isToday
-                        ? "bg-gray-100 text-gray-800 font-bold border border-gray-300"
-                        : "hover:bg-gray-100"
-                    }
-                    ${trips.length > 0 ? "font-bold" : ""}
-                  `}
-                >
-                  {day}
-                  {trips.length > 0 && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
-                  )}
-                  {isToday && !isSelected && (
-                    <div className="absolute top-0 right-0 w-2 h-2 bg-gray-400 rounded-full"></div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <CalendarGrid
+          currentMonth={currentMonth}
+          days={days}
+          seaTrips={seaTrips}
+          selectedDate={selectedDate}
+          onDateSelect={setSelectedDate}
+        />
 
         {/* Детали выбранного дня */}
         {loading ? (
-          <div className="flex justify-center p-8">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          </div>
+          <LoadingSpinner />
         ) : selectedTrips?.length ? (
           selectedTrips.map((trip) => (
-            <div key={trip.id} className="border-t bg-gray-50 p-4">
-              <div className="space-y-4">
-                {/* Информация о рейсе */}
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold flex items-center">
-                      <Ship className="w-5 h-5 mr-2 text-blue-600" />
-                      {trip.vessel}
-                    </h3>
-                    <div className="flex items-center">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          trip.status
-                        )}`}
-                      >
-                        {getTypeText(trip.type)}
-                      </span>
-
-                      {/* Кнопки записи/выписки для обычных пользователей */}
-                      {!isCaptain && tgUser && (
-                        <button
-                          onClick={() =>
-                            handleCrewAction(
-                              trip.id,
-                              isUserInTrip(trip) ? "remove" : "add",
-                              String(tgUser.id)
-                            )
-                          }
-                          disabled={
-                            actionLoading.tripId === trip.id &&
-                            actionLoading.memberId === null
-                          }
-                          className={`ml-2 px-3 py-1 rounded-md text-sm font-medium ${
-                            isUserInTrip(trip)
-                              ? "bg-red-100 text-red-600 hover:bg-red-200"
-                              : "bg-green-100 text-green-600 hover:bg-green-200"
-                          }`}
-                        >
-                          {actionLoading.tripId === trip.id &&
-                          actionLoading.memberId === null ? (
-                            <Loader2 className="w-4 h-4 animate-spin inline" />
-                          ) : isUserInTrip(trip) ? (
-                            "Отменить запись"
-                          ) : (
-                            "Записаться"
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-2" />
-                      <span>Выход: {trip.departure}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Состав экипажа */}
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div
-                    className="flex items-center justify-between cursor-pointer mb-3"
-                    onClick={() => toggleCrewExpanded(trip.id)}
-                  >
-                    <h4 className="text-md font-semibold flex items-center">
-                      <Users className="w-5 h-5 mr-2 text-blue-600" />
-                      Состав экипажа ({trip.crew.length} чел.)
-                    </h4>
-                    {expandedCrew.has(trip.id) ? (
-                      <ChevronUp className="w-5 h-5 text-gray-500" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-500" />
-                    )}
-                  </div>
-
-                  {expandedCrew.has(trip.id) && (
-                    <div className="space-y-3 transition-all duration-300 ease-in-out">
-                      {trip.crew.map((member) => (
-                        <div
-                          key={member.id}
-                          className="border-l-4 border-blue-600 pl-3 py-2 flex justify-between items-start"
-                        >
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {member.name}
-                            </div>
-                            <div className="text-sm text-blue-600 font-medium">
-                              {member.position}
-                            </div>
-                          </div>
-
-                          {isCaptain && (
-                            <div className="flex space-x-1">
-                              <button
-                                onClick={() =>
-                                  handleCrewAction(
-                                    trip.id,
-                                    "remove",
-                                    member.id,
-                                    true
-                                  )
-                                }
-                                disabled={
-                                  actionLoading.tripId === trip.id &&
-                                  actionLoading.memberId === member.id
-                                }
-                                className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
-                                title="Удалить из экипажа"
-                              >
-                                {actionLoading.tripId === trip.id &&
-                                actionLoading.memberId === member.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <X className="w-4 h-4" />
-                                )}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <TripCard
+              key={trip.id}
+              trip={trip}
+              isCaptain={isCaptain}
+              isUserInTrip={isUserInTrip(trip)}
+              isCrewExpanded={expandedCrew.has(trip.id)}
+              actionLoading={actionLoading}
+              onToggleCrewExpanded={() => toggleCrewExpanded(trip.id)}
+              onJoinLeave={(action) =>
+                handleCrewAction(trip.id, action, String(tgUser!.id))
+              }
+              onRemoveMember={(memberId) =>
+                handleCrewAction(trip.id, "remove", memberId, true)
+              }
+            />
           ))
         ) : !selectedDate ? (
-          <div className="border-t bg-gray-50 p-8 text-center text-gray-500">
-            <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>Выберите дату для просмотра состава экипажа</p>
-          </div>
+          <EmptyState type="no-date-selected" />
         ) : (
-          <div className="border-t bg-gray-50 p-8 text-center text-gray-500">
-            <Ship className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>На выбранную дату рейсов не запланировано</p>
-          </div>
+          <EmptyState type="no-trips" />
         )}
       </div>
     </div>
