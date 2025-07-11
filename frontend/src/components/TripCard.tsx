@@ -37,11 +37,8 @@ const TripCard: React.FC<TripCardProps> = ({
         {/* Информация о рейсе */}
         <div className="bg-white rounded-lg p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold flex items-center">
-              <Ship className="w-5 h-5 mr-2 text-blue-600" />
-              {trip.vessel}
-            </h3>
             <div className="flex items-center">
+              <Ship className="w-5 h-5 mr-2 text-blue-600" />
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                   trip.status
@@ -49,7 +46,8 @@ const TripCard: React.FC<TripCardProps> = ({
               >
                 {getTypeText(trip.type)}
               </span>
-
+            </div>
+            <div className="flex items-center">
               {/* Кнопки записи/выписки для обычных пользователей */}
               {!isCaptain && (
                 <button
