@@ -1,6 +1,6 @@
 import React from "react";
 import type { SeaTrip } from "../interfaces/inrefaces";
-import { Clock, Loader2, Ship } from "lucide-react";
+import { Clock, Loader2, Sailboat } from "lucide-react";
 import { getStatusColor, getTypeText } from "../utils/utils";
 import CrewSection from "./CrewSection";
 
@@ -38,7 +38,7 @@ const TripCard: React.FC<TripCardProps> = ({
         <div className="bg-white rounded-lg p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center">
-              <Ship className="w-5 h-5 mr-2 text-blue-600" />
+              <Sailboat className="w-5 h-5 mr-2 text-blue-600" />
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                   trip.status
@@ -62,7 +62,7 @@ const TripCard: React.FC<TripCardProps> = ({
                   {isMainActionLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin inline" />
                   ) : isUserInTrip ? (
-                    "Отменить запись"
+                    "Выписаться"
                   ) : (
                     "Записаться"
                   )}

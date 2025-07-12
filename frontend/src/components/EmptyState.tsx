@@ -1,4 +1,4 @@
-import { Calendar, Ship } from "lucide-react";
+import { Calendar, Sailboat } from "lucide-react";
 import React from "react";
 
 interface EmptyStateProps {
@@ -13,7 +13,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ type, className = "" }) => {
       message: "Выберите дату для просмотра состава экипажа",
     },
     "no-trips": {
-      icon: Ship,
+      icon: Sailboat,
       message: "На выбранную дату рейсов не запланировано",
     },
   };

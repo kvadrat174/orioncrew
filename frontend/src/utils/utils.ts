@@ -45,7 +45,7 @@ export const getTypeText = (type: SeaTrip["type"]) => {
     case "morningTraining":
       return "Утренняя тренировка";
     case "training":
-      return "Тренировка";
+      return "Вечерняя тренировка";
     case "trainingRace":
       return "Тренировочная гонка";
     case "race":

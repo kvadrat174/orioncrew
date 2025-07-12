@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Ship } from "lucide-react";
+import { Sailboat} from "lucide-react";
 import WebApp from "@twa-dev/sdk";
 import type { TgUser } from "../types/telegram";
 import axios from "axios";
@@ -163,7 +163,7 @@ const TelegramCrewApp: React.FC = () => {
         <div className="bg-blue-600 text-white p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Ship className="w-6 h-6" />
+              <Sailboat className="w-6 h-6" />
               <h1 className="text-xl font-bold">Календарь экипажа</h1>
             </div>
             {tgUser && <UserBadge tgUser={tgUser} isCaptain={isCaptain} />}
