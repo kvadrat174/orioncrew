@@ -39,6 +39,13 @@ export const formatDate = (year: number, month: number, day: number) => {
   )}`;
 };
 
+/* Метод для проверки что тренировка еще не началась (для блокировки кнопок "Записаться" и "Выписаться")*/
+export const isTripInFuture = (tripDate: string, tripTime: string) => {
+  const now = new Date();
+  const tripDateTime = new Date(`${tripDate}T${tripTime}:00`);
+  return tripDateTime > now;
+};
+
 /* Метод получения типа выхода */
 export const getTypeText = (type: SeaTrip["type"]) => {
   switch (type) {

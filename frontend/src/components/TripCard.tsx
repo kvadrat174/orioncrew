@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import type { SeaTrip } from "../interfaces/inrefaces";
 import { Clock, Loader2, Sailboat } from "lucide-react";
-import { getStatusColor, getTypeText } from "../utils/utils";
+import { getStatusColor, getTypeText, isTripInFuture } from "../utils/utils";
 import CrewSection from "./CrewSection";
 
 interface TripCardProps {
@@ -30,6 +30,21 @@ const TripCard: React.FC<TripCardProps> = ({
 }) => {
   const isMainActionLoading =
     actionLoading.tripId === trip.id && actionLoading.memberId === null;
+  const isFutureTrip = isTripInFuture(trip.date, trip.departure);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleJoinLeave = async (action: "add" | "remove") => {
+    if (!isFutureTrip) return;
+
+    setIsLoading(true);
+    try {
+      await onJoinLeave(action);
+    } catch (error) {
+      console.error("Ошибка при изменении записи:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="border-t bg-gray-50 p-4">
@@ -49,17 +64,23 @@ const TripCard: React.FC<TripCardProps> = ({
             </div>
             <div className="flex items-center">
               {/* Кнопки записи/выписки для обычных пользователей */}
-              {!isCaptain && (
+              {!isCaptain && isFutureTrip && (
                 <button
-                  onClick={() => onJoinLeave(isUserInTrip ? "remove" : "add")}
-                  disabled={isMainActionLoading}
+                  onClick={() =>
+                    handleJoinLeave(isUserInTrip ? "remove" : "add")
+                  }
+                  disabled={isMainActionLoading || isLoading}
                   className={`ml-2 px-3 py-1 rounded-md text-sm font-medium ${
                     isUserInTrip
                       ? "bg-red-100 text-red-600 hover:bg-red-200"
                       : "bg-green-100 text-green-600 hover:bg-green-200"
+                  } ${
+                    isMainActionLoading || isLoading
+                      ? "opacity-70 cursor-not-allowed"
+                      : ""
                   }`}
                 >
-                  {isMainActionLoading ? (
+                  {isMainActionLoading || isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin inline" />
                   ) : isUserInTrip ? (
                     "Выписаться"
@@ -67,6 +88,11 @@ const TripCard: React.FC<TripCardProps> = ({
                     "Записаться"
                   )}
                 </button>
+              )}
+              {!isFutureTrip && !isCaptain && (
+                <span className="ml-2 text-sm text-gray-500">
+                  Запись закрыта
+                </span>
               )}
             </div>
           </div>

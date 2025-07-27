@@ -28,17 +28,18 @@ const DayCell: React.FC<DayCellProps> = ({
         isSelected
           ? "bg-blue-600 text-white"
           : isToday
-          ? "bg-gray-100 text-gray-800 font-bold border border-gray-300"
+          ? "bg-gray-200 text-gray-800 font-bold"
           : "hover:bg-gray-100"
       }
 ${tripsCount > 0 ? "font-bold" : ""}`}
     >
       {day}
       {tripsCount > 0 && (
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
-      )}
-      {isToday && !isSelected && (
-        <div className="absolute top-0 right-0 w-2 h-2 bg-gray-400 rounded-full"></div>
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex justify-center space-x-1">
+          {[...Array(tripsCount)].map((_, index) => (
+            <div key={index} className="w-1 h-1 bg-blue-600 rounded-full"></div>
+          ))}
+        </div>
       )}
     </button>
   );

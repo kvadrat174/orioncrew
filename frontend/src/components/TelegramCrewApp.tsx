@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Sailboat} from "lucide-react";
+import { Sailboat } from "lucide-react";
 import WebApp from "@twa-dev/sdk";
 import type { TgUser } from "../types/telegram";
 import axios from "axios";
@@ -81,18 +81,21 @@ const TelegramCrewApp: React.FC = () => {
     fetchTrips();
   }, []);
 
+  // Хендлер на прошлый месяц
   const handlePrevMonth = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     setCurrentMonth(new Date(year, month - 1));
   };
 
+  // Хендлер на следующий месяц
   const handleNextMonth = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     setCurrentMonth(new Date(year, month + 1));
   };
 
+  // Тоггл на развертывание списка команды
   const toggleCrewExpanded = (tripId: string) => {
     setExpandedCrew((prev) => {
       const newSet = new Set(prev);
@@ -105,55 +108,83 @@ const TelegramCrewApp: React.FC = () => {
     });
   };
 
+  // Хендлер на действия пользователя
   const handleCrewAction = async (
     tripId: string,
     action: "add" | "remove",
     memberId?: string,
     byCaptain = false
   ) => {
-    if (!tgUser) return;
+    if (!tgUser) {
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert("Пользователь не авторизован");
+      }
+      return;
+    }
 
+    // Состояние загрузки для конкретной кнопки
     setActionLoading({ tripId, memberId: memberId || null });
 
     try {
-      let response;
-      if (action === "add") {
-        response = await axios.post(`${BASE_URL}/trips/join`, {
-          tripId: tripId,
-          userId: String(memberId),
-          byCaptain,
-        });
-      } else {
-        response = await axios.post(`${BASE_URL}/trips/leave`, {
-          tripId: tripId,
-          userId: String(memberId),
-          byCaptain,
-        });
-      }
+      const endpoint = action === "add" ? "join" : "leave";
+      const payload = {
+        tripId: tripId,
+        userId: String(memberId || tgUser.id), // Используем memberId или tgUser.id
+        byCaptain,
+      };
 
+      const response = await axios.post(
+        `${BASE_URL}/trips/${endpoint}`,
+        payload
+      );
+
+      // Обновляем данные только при успешном запросе
       setSeaTrips(response.data);
+
+      // Показываем уведомление об успехе в Telegram
+      if (window.Telegram?.WebApp) {
+        const actionName = action === "add" ? "записан" : "выписан";
+        window.Telegram.WebApp.showAlert(
+          `Успешно! Пользователь ${actionName}.`
+        );
+      }
     } catch (error) {
       console.error("Ошибка при изменении состава экипажа:", error);
+
+      // Показываем разные сообщения об ошибках
+      let errorMessage = "Произошла ошибка. Попробуйте позже.";
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || errorMessage;
+      }
+
       if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert("Произошла ошибка. Попробуйте позже.");
+        window.Telegram.WebApp.showAlert(errorMessage);
       }
     } finally {
+      // Сбрасываем состояние загрузки независимо от результата
       setActionLoading({ tripId: null, memberId: null });
     }
   };
 
+  // Метод получения выходов в дату
   const getTripsForDate = (dateString: string) => {
     return seaTrips.filter((trip) => trip.date === dateString);
   };
 
+  // Проверка на капитана
   const isCaptain = tgUser?.id === CAPTAIN_ID;
+
+  // Проверка на пользователя в списке выхода
   const isUserInTrip = (trip: SeaTrip) => {
     if (!tgUser) return false;
 
     return trip.crew.some((member) => member.id === String(tgUser.id));
   };
 
+  // Дни в календаре
   const days = getDaysInMonth(currentMonth);
+
+  // Выходы на выбранную дату
   const selectedTrips = selectedDate ? getTripsForDate(selectedDate) : null;
 
   return (
@@ -190,23 +221,25 @@ const TelegramCrewApp: React.FC = () => {
         {loading ? (
           <LoadingSpinner />
         ) : selectedTrips?.length ? (
-          selectedTrips.map((trip) => (
-            <TripCard
-              key={trip.id}
-              trip={trip}
-              isCaptain={isCaptain}
-              isUserInTrip={isUserInTrip(trip)}
-              isCrewExpanded={expandedCrew.has(trip.id)}
-              actionLoading={actionLoading}
-              onToggleCrewExpanded={() => toggleCrewExpanded(trip.id)}
-              onJoinLeave={(action) =>
-                handleCrewAction(trip.id, action, String(tgUser!.id))
-              }
-              onRemoveMember={(memberId) =>
-                handleCrewAction(trip.id, "remove", memberId, true)
-              }
-            />
-          ))
+          selectedTrips
+            .sort((a, b) => a.departure.localeCompare(b.departure))
+            .map((trip) => (
+              <TripCard
+                key={trip.id}
+                trip={trip}
+                isCaptain={isCaptain}
+                isUserInTrip={isUserInTrip(trip)}
+                isCrewExpanded={expandedCrew.has(trip.id)}
+                actionLoading={actionLoading}
+                onToggleCrewExpanded={() => toggleCrewExpanded(trip.id)}
+                onJoinLeave={(action) =>
+                  handleCrewAction(trip.id, action, String(tgUser!.id))
+                }
+                onRemoveMember={(memberId) =>
+                  handleCrewAction(trip.id, "remove", memberId, true)
+                }
+              />
+            ))
         ) : !selectedDate ? (
           <EmptyState type="no-date-selected" />
         ) : (

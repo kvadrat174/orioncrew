@@ -14,7 +14,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ type, className = "" }) => {
     },
     "no-trips": {
       icon: Sailboat,
-      message: "На выбранную дату рейсов не запланировано",
+      message: "На выбранную дату выходов не запланировано",
     },
   };
 
