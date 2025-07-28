@@ -13,9 +13,12 @@ interface TripCardProps {
     tripId: string | null;
     memberId: string | null;
   };
+  softRemovedMembers?: string[];
   onToggleCrewExpanded: () => void;
   onJoinLeave: (action: "add" | "remove") => void;
   onRemoveMember: (memberId: string) => void;
+  onConfirmRemoval?: () => void;
+  onCancelRemoval?: () => void;
 }
 
 const TripCard: React.FC<TripCardProps> = ({
@@ -24,9 +27,12 @@ const TripCard: React.FC<TripCardProps> = ({
   isUserInTrip,
   isCrewExpanded,
   actionLoading,
+  softRemovedMembers = [],
   onToggleCrewExpanded,
   onJoinLeave,
   onRemoveMember,
+  onConfirmRemoval,
+  onCancelRemoval,
 }) => {
   const isMainActionLoading =
     actionLoading.tripId === trip.id && actionLoading.memberId === null;

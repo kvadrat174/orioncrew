@@ -37,6 +37,9 @@ const TelegramCrewApp: React.FC = () => {
     memberId: string | null;
   }>({ tripId: null, memberId: null });
   const [expandedCrew, setExpandedCrew] = useState<Set<string>>(new Set());
+  const [softRemovedMembers, setSoftRemovedMembers] = useState<
+    Record<string, string[]>
+  >({});
 
   useEffect(() => {
     WebApp.ready();
@@ -122,6 +125,27 @@ const TelegramCrewApp: React.FC = () => {
       return;
     }
 
+    // Для мягкого удаления и восстановления
+    if (byCaptain && action === "remove") {
+      const isSoftRemoved = softRemovedMembers[tripId]?.includes(memberId!);
+
+      if (isSoftRemoved) {
+        // Восстановление участника
+        setSoftRemovedMembers((prev) => ({
+          ...prev,
+          [tripId]: prev[tripId].filter((id) => id !== memberId),
+        }));
+        return;
+      } else {
+        // Мягкое удаление
+        setSoftRemovedMembers((prev) => ({
+          ...prev,
+          [tripId]: [...(prev[tripId] || []), memberId!],
+        }));
+        return;
+      }
+    }
+
     // Состояние загрузки для конкретной кнопки
     setActionLoading({ tripId, memberId: memberId || null });
 
@@ -162,6 +186,42 @@ const TelegramCrewApp: React.FC = () => {
       }
     } finally {
       // Сбрасываем состояние загрузки независимо от результата
+      setActionLoading({ tripId: null, memberId: null });
+    }
+  };
+
+  // Функции для подтверждения удаления
+  const confirmRemoval = async (tripId: string) => {
+    if (!softRemovedMembers[tripId]?.length) return;
+
+    try {
+      setActionLoading({ tripId, memberId: null });
+
+      // Отправляем запрос на удаление для каждого участника
+      await Promise.all(
+        softRemovedMembers[tripId].map((memberId) =>
+          axios.post(`${BASE_URL}/trips/leave`, {
+            tripId,
+            userId: memberId,
+            byCaptain: true,
+          })
+        )
+      );
+
+      // Обновляем данные и очищаем мягко удаленных
+      const response = await axios.get<SeaTrip[]>(`${BASE_URL}/trips`);
+      setSeaTrips(response.data);
+      setSoftRemovedMembers((prev) => ({ ...prev, [tripId]: [] }));
+
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert("Удаление подтверждено!");
+      }
+    } catch (error) {
+      console.error("Ошибка при подтверждении удаления:", error);
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert("Ошибка при удалении участников");
+      }
+    } finally {
       setActionLoading({ tripId: null, memberId: null });
     }
   };
@@ -231,12 +291,17 @@ const TelegramCrewApp: React.FC = () => {
                 isUserInTrip={isUserInTrip(trip)}
                 isCrewExpanded={expandedCrew.has(trip.id)}
                 actionLoading={actionLoading}
+                softRemovedMembers={softRemovedMembers[trip.id] || []}
                 onToggleCrewExpanded={() => toggleCrewExpanded(trip.id)}
                 onJoinLeave={(action) =>
                   handleCrewAction(trip.id, action, String(tgUser!.id))
                 }
                 onRemoveMember={(memberId) =>
                   handleCrewAction(trip.id, "remove", memberId, true)
+                }
+                onConfirmRemoval={() => confirmRemoval(trip.id)}
+                onCancelRemoval={() =>
+                  setSoftRemovedMembers((prev) => ({ ...prev, [tripId]: [] }))
                 }
               />
             ))

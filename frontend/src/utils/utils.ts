@@ -9,12 +9,12 @@ export const getDaysInMonth = (date: Date) => {
   const daysInMonth = lastDay.getDate();
   let startingDayOfWeek = firstDay.getDay();
 
-  // Преобразование порядка дней недели чтобы понедельник был = 0, а воскресенье = 6
+  /* Преобразование порядка дней недели чтобы понедельник был = 0, а воскресенье = 6 */
   startingDayOfWeek = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
 
   const days = [];
 
-  // Добавление пустых ячеек для дней предыдущего месяца
+  /* Добавление пустых ячеек для дней предыдущего месяца */
   for (let i = 0; i < startingDayOfWeek; i++) {
     days.push(null);
   }
@@ -31,7 +31,7 @@ export const getCurrentDate = () => {
   const today = new Date();
   return formatDate(today.getFullYear(), today.getMonth(), today.getDate());
 };
-// Форматирование даты
+/* Форматирование даты */
 export const formatDate = (year: number, month: number, day: number) => {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(
     2,
@@ -39,7 +39,7 @@ export const formatDate = (year: number, month: number, day: number) => {
   )}`;
 };
 
-/* Метод для проверки что тренировка еще не началась (для блокировки кнопок "Записаться" и "Выписаться")*/
+/* Метод для проверки что тренировка еще не началась (для блокировки кнопок "Записаться" и "Выписаться") */
 export const isTripInFuture = (tripDate: string, tripTime: string) => {
   const now = new Date();
   const tripDateTime = new Date(`${tripDate}T${tripTime}:00`);
@@ -83,3 +83,6 @@ export const getStatusColor = (status: string) => {
       return "bg-gray-100 text-gray-800";
   }
 };
+
+/* Метод добавления в состав экипажа на выход новых участников */
+export const getCrewMemberNotInList = () => {};
