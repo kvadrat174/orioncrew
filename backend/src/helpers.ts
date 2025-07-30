@@ -54,3 +54,10 @@ export function getDefaultDuration(activityType: SeaTrip["type"]): string {
 
   return timeMap[activityType];
 }
+
+export function mapUserRole(role: string) {
+  if (role === 'captain') return 'Капитан'
+  if (role === 'boatswain') return 'Боцман'
+  if (role === 'crew') return 'Матрос'
+  return 'Гость'
+}

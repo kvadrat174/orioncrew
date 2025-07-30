@@ -362,6 +362,15 @@ export namespace TripsService {
     value: string,
     captain = false
   ) {
+    const existingTrip = await orionDb.getSingleTripFromDb(tripId)
+
+    if (existingTrip) {
+      await orionDb.addTripUser({
+        userId: +userId,
+        tripId,
+      })
+    }
+
     const rawRows: string[][] = await getSheetData();
     const participantName: string = participantsMap[userId];
     let participantRowIndex = -1;
@@ -372,11 +381,11 @@ export namespace TripsService {
     });
     const tripIndex = rawRows[4].findIndex((id) => id === tripId);
     if (tripIndex === -1) {
-      throw Error("No such trip");
+      return await orionDb.getSingleTripFromDb(tripId);
     }
 
     if (participantRowIndex === -1) {
-      throw Error("No such participant");
+      return await orionDb.getSingleTripFromDb(tripId);
     }
 
     const columnLetter = getColumnLetter(tripIndex + 1);

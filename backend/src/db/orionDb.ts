@@ -2,7 +2,7 @@ import { and, eq, inArray, isNull, not } from "drizzle-orm";
 import { Db } from "src/Db";
 import { DbTrip, DbTripUser, DbUser, tripUsers, trips, users } from "./schema";
 import { SeaTripDto } from "src/Types";
-import { getDefaultDuration } from "src/helpers";
+import { getDefaultDuration, mapUserRole } from "src/helpers";
 
 export type OrionDb = Awaited<ReturnType<typeof create>>;
 const create = ({ db }: Db) => {
@@ -123,7 +123,7 @@ const create = ({ db }: Db) => {
         currentTrip.crew.push({
           id: user.id.toString(),
           name: `${user.firstName} ${user.lastName}`.trim(),
-          position: tripUser.role,
+          position: mapUserRole(tripUser.role),
           phone: undefined,
         });
       }
@@ -181,7 +181,7 @@ const create = ({ db }: Db) => {
         result.crew.push({
           id: row.users.id.toString(),
           name: `${row.users.firstName} ${row.users.lastName}`.trim(),
-          position: row.trip_users.role,
+          position: mapUserRole(row.trip_users.role),
           phone: undefined,
         });
       }
