@@ -373,7 +373,7 @@ export namespace TripsService {
       } else {
         await orionDb.updateTripUser(tripId, +userId, {
           kicked: captain,
-          deleted_at: captain ? new Date() : undefined,
+          deleted_at: captain ? undefined : new Date(),
         });
       }
     }
