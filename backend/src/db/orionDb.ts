@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, not } from "drizzle-orm";
 import { Db } from "src/Db";
 import { DbTrip, DbTripUser, DbUser, tripUsers, trips, users } from "./schema";
 import { SeaTripDto } from "src/Types";
@@ -38,6 +38,38 @@ const create = ({ db }: Db) => {
     const [updatedUserTrip] = await db.update(tripUsers).set(updates).where(and(eq(tripUsers.tripId, tripId), eq(tripUsers.userId, userId))).returning()
 
     return updatedUserTrip
+  }
+
+  async function getFreeCrew(tripId: string) {
+    const existingCrew = await db.select()
+      .from(tripUsers)
+      .where(
+        and(
+          eq(tripUsers.tripId, tripId),
+          isNull(tripUsers.deleted_at),
+          eq(tripUsers.kicked, false)
+        )
+      )
+      .execute();
+  
+    const freeUsers = await db.select()
+      .from(users)
+      .where(
+        and(
+          isNull(users.deleted_at),
+          existingCrew.length > 0 
+            ? not(inArray(users.id, existingCrew.map(u => u.userId)))
+            : undefined
+        )
+      )
+      .execute();
+  
+    return freeUsers.map(user => ({
+      id: user.id,
+      name: `${user.lastName} ${user.firstName}`.trim(),
+      position: user.role,
+      vessel: user.vessel
+    }));
   }
 
   async function getTripsFromDb(): Promise<SeaTripDto[]> {
@@ -168,6 +200,7 @@ const create = ({ db }: Db) => {
     getTripsFromDb,
     getSingleTripFromDb,
     updateTripUser,
+    getFreeCrew,
   };
 };
 

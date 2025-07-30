@@ -8,7 +8,7 @@ import { cors } from "@elysiajs/cors";
 import { DObject, getTypeText } from "./helpers";
 import { Db } from "./Db";
 import OrionDb from './db/orionDb'
-import { SeaTripDto } from "./Types";
+import { CrewMemberDto, SeaTripDto } from "./Types";
 import { TripsService } from "./Trips";
 import { Errors } from './Errors';
 
@@ -30,6 +30,13 @@ const create = async () => {
       const trips = TripsService.getTrips(orionDb);
 
       return trips;
+    })
+    .get("/free-crew/:tripId", async ({ params: { tripId } }) => {
+      const freeCrew = await TripsService.getFreeCrew(orionDb, tripId);
+
+      return freeCrew;
+    }, {
+      response: t.Array(CrewMemberDto),
     })
     .post("/trip", async ({ body }: { body: { type: string, departure: string }}) => {
       const trip = await TripsService.createNewTrip(orionDb, body.type, body.departure);

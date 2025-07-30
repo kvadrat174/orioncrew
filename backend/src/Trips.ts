@@ -9,6 +9,7 @@ import {
 import {
   ActivityRegistration,
   CrewMember,
+  CrewMemberDto,
   SeaTrip,
   SeaTripDto,
   TActivityMapWithParticipants,
@@ -20,6 +21,15 @@ import { createLocalDate, getDefaultDuration, toMapByProp } from "./helpers";
 export namespace TripsService {
   export async function getTrips(orionDb: OrionDb): Promise<SeaTrip[]> {
     return await orionDb.getTripsFromDb();
+  }
+
+  export async function getFreeCrew(orionDb: OrionDb, tripId: string): Promise<CrewMemberDto[]> {
+    const freeCrew = await orionDb.getFreeCrew(tripId);
+    return freeCrew.map(crew => ({
+      id: crew.id.toString(),
+      name: crew.name,
+      position: crew.position
+    }))
   }
 
   export async function createNewTrip(
