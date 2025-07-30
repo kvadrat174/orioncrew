@@ -83,6 +83,3 @@ export const getStatusColor = (status: string) => {
       return "bg-gray-100 text-gray-800";
   }
 };
-
-/* Метод добавления в состав экипажа на выход новых участников */
-export const getCrewMemberNotInList = () => {};

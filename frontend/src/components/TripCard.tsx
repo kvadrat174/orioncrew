@@ -3,6 +3,7 @@ import type { SeaTrip } from "../interfaces/inrefaces";
 import { Clock, Loader2, Sailboat } from "lucide-react";
 import { getStatusColor, getTypeText, isTripInFuture } from "../utils/utils";
 import CrewSection from "./CrewSection";
+import type { TeamMember } from "../types/telegram";
 
 interface TripCardProps {
   trip: SeaTrip;
@@ -13,6 +14,8 @@ interface TripCardProps {
     tripId: string | null;
     memberId: string | null;
   };
+  allTeamMembers: TeamMember[];
+  onAddMember: (memberId: string) => void;
   softRemovedMembers?: string[];
   onToggleCrewExpanded: () => void;
   onJoinLeave: (action: "add" | "remove") => void;
@@ -27,12 +30,14 @@ const TripCard: React.FC<TripCardProps> = ({
   isUserInTrip,
   isCrewExpanded,
   actionLoading,
+  allTeamMembers,
   softRemovedMembers = [],
   onToggleCrewExpanded,
   onJoinLeave,
   onRemoveMember,
   onConfirmRemoval,
   onCancelRemoval,
+  onAddMember,
 }) => {
   const isMainActionLoading =
     actionLoading.tripId === trip.id && actionLoading.memberId === null;
@@ -115,15 +120,20 @@ const TripCard: React.FC<TripCardProps> = ({
         <CrewSection
           tripId={trip.id}
           crew={trip.crew}
+          allTeamMembers={allTeamMembers}
           isExpanded={isCrewExpanded}
           isCaptain={isCaptain}
           actionLoading={actionLoading}
+          softRemovedMembers={softRemovedMembers}
           onToggleExpanded={onToggleCrewExpanded}
           onRemoveMember={onRemoveMember}
+          onAddMember={onAddMember}
+          onConfirmRemoval={onConfirmRemoval}
+          onCancelRemoval={onCancelRemoval}
         />
       </div>
     </div>
   );
 };
 
-export default TripCard;
+export default React.memo(TripCard);

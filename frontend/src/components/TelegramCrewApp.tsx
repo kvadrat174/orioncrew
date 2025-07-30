@@ -40,6 +40,13 @@ const TelegramCrewApp: React.FC = () => {
   const [softRemovedMembers, setSoftRemovedMembers] = useState<
     Record<string, string[]>
   >({});
+  const [allTeamMembers, setAllTeamMembers] = useState<
+    Array<{
+      id: string;
+      name: string;
+      position: string;
+    }>
+  >([]);
 
   useEffect(() => {
     WebApp.ready();
@@ -68,10 +75,18 @@ const TelegramCrewApp: React.FC = () => {
   const fetchTrips = async () => {
     try {
       setLoading(true);
-      const response = await axios.get<SeaTrip[]>(`${BASE_URL}/trips`);
-      setSeaTrips(response.data);
+      const [tripsResponse, teamResponse] = await Promise.all([
+        axios.get<SeaTrip[]>(`${BASE_URL}/trips`),
+        axios
+          .get<Array<{ id: string; name: string; position: string }>>(
+            `${BASE_URL}/team`
+          )
+          .catch(() => ({ data: [] })),
+      ]);
+      setSeaTrips(tripsResponse.data);
+      setAllTeamMembers(teamResponse.data);
     } catch (error) {
-      console.error("Ошибка при загрузке данных о рейсах:", error);
+      console.error("Ошибка при загрузке данных:", error);
       if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.showAlert("Ошибка загрузки данных");
       }
@@ -126,23 +141,25 @@ const TelegramCrewApp: React.FC = () => {
     }
 
     // Для мягкого удаления и восстановления
-    if (byCaptain && action === "remove") {
-      const isSoftRemoved = softRemovedMembers[tripId]?.includes(memberId!);
+    if (byCaptain) {
+      if (action === "remove") {
+        const isSoftRemoved = softRemovedMembers[tripId]?.includes(memberId!);
 
-      if (isSoftRemoved) {
-        // Восстановление участника
-        setSoftRemovedMembers((prev) => ({
-          ...prev,
-          [tripId]: prev[tripId].filter((id) => id !== memberId),
-        }));
-        return;
-      } else {
-        // Мягкое удаление
-        setSoftRemovedMembers((prev) => ({
-          ...prev,
-          [tripId]: [...(prev[tripId] || []), memberId!],
-        }));
-        return;
+        if (isSoftRemoved) {
+          // Восстановление участника
+          setSoftRemovedMembers((prev) => ({
+            ...prev,
+            [tripId]: prev[tripId].filter((id) => id !== memberId),
+          }));
+          return;
+        } else {
+          // Мягкое удаление
+          setSoftRemovedMembers((prev) => ({
+            ...prev,
+            [tripId]: [...(prev[tripId] || []), memberId!],
+          }));
+          return;
+        }
       }
     }
 
@@ -226,6 +243,41 @@ const TelegramCrewApp: React.FC = () => {
     }
   };
 
+  const handleAddMember = async (tripId: string, memberId: string) => {
+    try {
+      setActionLoading({ tripId, memberId });
+
+      const response = await axios.post(`${BASE_URL}/trips/join`, {
+        tripId,
+        userId: memberId,
+        byCaptain: true,
+      });
+
+      setSeaTrips(response.data);
+
+      // Очищаем мягко удаленных при успешном добавлении
+      setSoftRemovedMembers((prev) => ({
+        ...prev,
+        [tripId]: prev[tripId]?.filter((id) => id !== memberId) || [],
+      }));
+
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert("Участник успешно добавлен!");
+      }
+    } catch (error) {
+      console.error("Ошибка при добавлении участника:", error);
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert(
+          axios.isAxiosError(error)
+            ? error.response?.data?.message || "Не удалось добавить участника"
+            : "Не удалось добавить участника"
+        );
+      }
+    } finally {
+      setActionLoading({ tripId: null, memberId: null });
+    }
+  };
+
   // Метод получения выходов в дату
   const getTripsForDate = (dateString: string) => {
     return seaTrips.filter((trip) => trip.date === dateString);
@@ -301,8 +353,10 @@ const TelegramCrewApp: React.FC = () => {
                 }
                 onConfirmRemoval={() => confirmRemoval(trip.id)}
                 onCancelRemoval={() =>
-                  setSoftRemovedMembers((prev) => ({ ...prev, [tripId]: [] }))
+                  setSoftRemovedMembers((prev) => ({ ...prev, [trip.id]: [] }))
                 }
+                onAddMember={(memberId) => handleAddMember(trip.id, memberId)}
+                allTeamMembers={allTeamMembers}
               />
             ))
         ) : !selectedDate ? (
