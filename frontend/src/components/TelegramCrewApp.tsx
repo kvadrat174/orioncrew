@@ -14,7 +14,7 @@ import TripCard from "./TripCard";
 import EmptyState from "./EmptyState";
 
 // для пуша в гит
-const BASE_URL = "https://crew.mysailing.ru/api";
+export const BASE_URL = "https://crew.mysailing.ru/api";
 // для разработки фронта
 // const BASE_URL = "http://localhost:3500";
 
@@ -40,13 +40,6 @@ const TelegramCrewApp: React.FC = () => {
   const [softRemovedMembers, setSoftRemovedMembers] = useState<
     Record<string, string[]>
   >({});
-  const [allTeamMembers, setAllTeamMembers] = useState<
-    Array<{
-      id: string;
-      name: string;
-      position: string;
-    }>
-  >([]);
 
   useEffect(() => {
     WebApp.ready();
@@ -75,16 +68,10 @@ const TelegramCrewApp: React.FC = () => {
   const fetchTrips = async () => {
     try {
       setLoading(true);
-      const [tripsResponse, teamResponse] = await Promise.all([
+      const [tripsResponse] = await Promise.all([
         axios.get<SeaTrip[]>(`${BASE_URL}/trips`),
-        axios
-          .get<Array<{ id: string; name: string; position: string }>>(
-            `${BASE_URL}/team`
-          )
-          .catch(() => ({ data: [] })),
       ]);
       setSeaTrips(tripsResponse.data);
-      setAllTeamMembers(teamResponse.data);
     } catch (error) {
       console.error("Ошибка при загрузке данных:", error);
       if (window.Telegram?.WebApp) {
@@ -356,7 +343,6 @@ const TelegramCrewApp: React.FC = () => {
                   setSoftRemovedMembers((prev) => ({ ...prev, [trip.id]: [] }))
                 }
                 onAddMember={(memberId) => handleAddMember(trip.id, memberId)}
-                allTeamMembers={allTeamMembers}
               />
             ))
         ) : !selectedDate ? (

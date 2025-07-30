@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Users, ChevronUp, ChevronDown, Plus, Loader2, X } from "lucide-react";
 import CrewMember from "./CrewMember";
 import type { TeamMember } from "../types/telegram";
+import { BASE_URL } from "./TelegramCrewApp";
+import axios from "axios";
 
 interface CrewSectionProps {
   tripId: string;
@@ -10,7 +12,7 @@ interface CrewSectionProps {
     name: string;
     position: string;
   }>;
-  allTeamMembers: TeamMember[];
+  // allTeamMembers: TeamMember[];
   isExpanded: boolean;
   isCaptain: boolean;
   actionLoading: {
@@ -28,7 +30,6 @@ interface CrewSectionProps {
 const CrewSection: React.FC<CrewSectionProps> = ({
   tripId,
   crew,
-  allTeamMembers,
   isExpanded,
   isCaptain,
   actionLoading,
@@ -42,11 +43,31 @@ const CrewSection: React.FC<CrewSectionProps> = ({
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [selectedMember, setSelectedMember] = useState("");
   const [isAddLoading, setIsAddLoading] = useState(false);
+  const [availableMembers, setAvailableMembers] = useState<TeamMember[]>([]);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+  const [membersError, setMembersError] = useState<string | null>(null);
 
-  // Фильтруем участников, которые еще не в текущем рейсе
-  const availableMembers = allTeamMembers.filter(
-    (member) => !crew.some((m) => m.id === member.id)
-  );
+  const fetchAvailableMembers = async () => {
+    setIsLoadingMembers(true);
+    setMembersError(null);
+    try {
+      const response = await axios.get<
+        Array<{ id: string; name: string; position: string }>
+      >(`${BASE_URL}/free-crew/${tripId}`);
+      setAvailableMembers(response.data);
+    } catch (error) {
+      console.error("Ошибка при загрузке участников:", error);
+      setMembersError("Не удалось загрузить список участников");
+    } finally {
+      setIsLoadingMembers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isExpanded && isCaptain) {
+      fetchAvailableMembers();
+    }
+  }, [isExpanded, isCaptain]);
 
   const handleAddMember = async () => {
     if (!selectedMember) return;
@@ -56,6 +77,8 @@ const CrewSection: React.FC<CrewSectionProps> = ({
       await onAddMember(selectedMember);
       setSelectedMember("");
       setIsAddingMember(false);
+      // Обновляем список после добавления
+      await fetchAvailableMembers();
     } catch (error) {
       console.error("Ошибка при добавлении участника:", error);
     } finally {
@@ -83,49 +106,85 @@ const CrewSection: React.FC<CrewSectionProps> = ({
       {isExpanded && (
         <div className="space-y-3 transition-all duration-300 ease-in-out">
           {/* Кнопка добавления для капитана */}
-          {isCaptain && availableMembers.length > 0 && (
+          {isCaptain && (
             <div className="mb-2">
               {!isAddingMember ? (
                 <button
                   onClick={() => setIsAddingMember(true)}
                   className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                  disabled={isLoadingMembers}
                 >
                   <Plus className="w-4 h-4 mr-1" />
-                  Добавить участника
+                  {isLoadingMembers ? "Загрузка..." : "Добавить участника"}
                 </button>
               ) : (
-                <div className="flex items-center space-x-2">
-                  <select
-                    value={selectedMember}
-                    onChange={(e) => setSelectedMember(e.target.value)}
-                    className="flex-1 p-2 border rounded-md text-sm"
-                  >
-                    <option value="">Выберите участника</option>
-                    {availableMembers.map((member) => (
-                      <option key={member.id} value={member.id}>
-                        {member.name} ({member.position})
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={handleAddMember}
-                    disabled={!selectedMember || isAddLoading}
-                    className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 disabled:bg-gray-300 flex items-center"
-                  >
-                    {isAddLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                    ) : null}
-                    Добавить
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsAddingMember(false);
-                      setSelectedMember("");
-                    }}
-                    className="px-3 py-1 bg-gray-200 rounded-md text-sm hover:bg-gray-300"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <select
+                      value={selectedMember}
+                      onChange={(e) => setSelectedMember(e.target.value)}
+                      className="flex-1 p-2 border rounded-md text-sm"
+                      disabled={
+                        isLoadingMembers || availableMembers.length === 0
+                      }
+                    >
+                      <option value="">Выберите участника</option>
+                      {availableMembers.map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.name} ({member.position})
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleAddMember}
+                      disabled={!selectedMember || isAddLoading}
+                      className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 disabled:bg-gray-300 flex items-center"
+                    >
+                      {isAddLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                      ) : null}
+                      Добавить
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsAddingMember(false);
+                        setSelectedMember("");
+                      }}
+                      className="px-3 py-1 bg-gray-200 rounded-md text-sm hover:bg-gray-300"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Отображение состояния загрузки */}
+                  {isLoadingMembers && (
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Загрузка списка участников...
+                    </div>
+                  )}
+
+                  {/* Отображение ошибки */}
+                  {membersError && (
+                    <div className="text-red-500 text-sm">
+                      {membersError}
+                      <button
+                        onClick={fetchAvailableMembers}
+                        className="ml-2 text-blue-500 hover:text-blue-700"
+                      >
+                        Попробовать снова
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Сообщение, если нет доступных участников */}
+                  {!isLoadingMembers &&
+                    availableMembers.length === 0 &&
+                    !membersError && (
+                      <div className="text-sm text-gray-500">
+                        Нет доступных участников для добавления
+                      </div>
+                    )}
                 </div>
               )}
             </div>
