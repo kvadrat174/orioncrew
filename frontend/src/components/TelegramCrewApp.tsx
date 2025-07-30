@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import DateTimePicker from "react-datetime-picker";
 import "react-calendar/dist/Calendar.css";
 import "react-datetime-picker/dist/DateTimePicker.css";
-import { Sailboat } from "lucide-react";
+import { Sailboat, Calendar, Clock } from "lucide-react";
 import WebApp from "@twa-dev/sdk";
 import type { TgUser } from "../types/telegram";
 import axios from "axios";
@@ -43,9 +42,13 @@ const TelegramCrewApp: React.FC = () => {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newTripType, setNewTripType] = useState<SeaTrip["type"]>("training");
-  const [newTripDateTime, setNewTripDateTime] = useState<Date | null>(
-    new Date()
-  );
+  
+  // Заменяем единый DateTime picker на отдельные поля
+  const [newTripDate, setNewTripDate] = useState<string>(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0]; // YYYY-MM-DD format
+  });
+  const [newTripTime, setNewTripTime] = useState<string>("10:00");
 
   useEffect(() => {
     WebApp.ready();
@@ -233,6 +236,53 @@ const TelegramCrewApp: React.FC = () => {
     }
   };
 
+  // Функция для создания локального ISO времени
+  const createLocalDateTime = (date: string, time: string): string => {
+    // Создаем дату в локальном времени
+    const localDateTime = new Date(`${date}T${time}:00`);
+    
+    // Получаем смещение временной зоны в минутах и конвертируем в миллисекунды
+    const timezoneOffset = localDateTime.getTimezoneOffset() * 60000;
+    
+    // Создаем локальное время, компенсируя смещение временной зоны
+    const localTime = new Date(localDateTime.getTime() - timezoneOffset);
+    
+    return localTime.toISOString();
+  };
+
+  const handleCreateTrip = async () => {
+    if (!newTripDate || !newTripTime) {
+      window.Telegram?.WebApp?.showAlert("Укажите дату и время");
+      return;
+    }
+
+    try {
+      const localDateTime = createLocalDateTime(newTripDate, newTripTime);
+      
+      const response = await axios.post(`${BASE_URL}/trip`, {
+        type: newTripType,
+        departure: localDateTime,
+      });
+      
+      setSeaTrips(response.data);
+      setIsCreateModalOpen(false);
+      
+      // Сбрасываем форму
+      const today = new Date();
+      setNewTripDate(today.toISOString().split('T')[0]);
+      setNewTripTime("10:00");
+      setNewTripType("training");
+      
+      window.Telegram?.WebApp?.showAlert("Выход создан!");
+    } catch (error) {
+      console.error("Ошибка при создании выхода:", error);
+      const msg = axios.isAxiosError(error)
+        ? error.response?.data?.message || "Ошибка создания"
+        : "Ошибка создания";
+      window.Telegram?.WebApp?.showAlert(msg);
+    }
+  };
+
   const getTripsForDate = (dateString: string) => {
     return seaTrips.filter((trip) => trip.date === dateString);
   };
@@ -246,6 +296,12 @@ const TelegramCrewApp: React.FC = () => {
 
   const days = getDaysInMonth(currentMonth);
   const selectedTrips = selectedDate ? getTripsForDate(selectedDate) : null;
+
+  // Предустановленные варианты времени
+  const timeOptions = [
+    "08:00", "09:00", "10:00", "11:00", "12:00", 
+    "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -323,78 +379,102 @@ const TelegramCrewApp: React.FC = () => {
       </div>
 
       {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-80 shadow-lg relative">
-            <h2 className="text-lg font-bold mb-4">Создать выход</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-lg">
+            <h2 className="text-lg font-bold mb-6 text-center">Создать выход</h2>
 
-            <label className="block mb-2 text-sm font-medium">Тип</label>
-            <select
-              value={newTripType}
-              onChange={(e) =>
-                setNewTripType(e.target.value as SeaTrip["type"])
-              }
-              className="w-full mb-4 border px-3 py-2 rounded"
-            >
-              {[
-                "morningTraining",
-                "training",
-                "trainingRace",
-                "race",
-                "trip",
-                "commercial",
-                "ladoga",
-              ].map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-
-            <label className="block mb-2 text-sm font-medium">
-              Дата и время
-            </label>
+            {/* Тип выхода */}
             <div className="mb-4">
-              <DateTimePicker
-                onChange={setNewTripDateTime}
-                value={newTripDateTime}
-                disableClock={true}
-                className="w-full"
-                calendarIcon={null}
-                clearIcon={null}
-                format="y-MM-dd HH:mm"
+              <label className="block mb-2 text-sm font-medium text-gray-700">
+                Тип выхода
+              </label>
+              <select
+                value={newTripType}
+                onChange={(e) =>
+                  setNewTripType(e.target.value as SeaTrip["type"])
+                }
+                className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {[
+                  { value: "morningTraining", label: "Утренняя тренировка" },
+                  { value: "training", label: "Тренировка" },
+                  { value: "trainingRace", label: "Тренировочная гонка" },
+                  { value: "race", label: "Гонка" },
+                  { value: "trip", label: "Поход" },
+                  { value: "commercial", label: "Коммерческий" },
+                  { value: "ladoga", label: "Ладога" },
+                ].map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Дата */}
+            <div className="mb-4">
+              <label className="block mb-2 text-sm font-medium text-gray-700">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Дата
+              </label>
+              <input
+                type="date"
+                value={newTripDate}
+                onChange={(e) => setNewTripDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
-            <div className="flex justify-end space-x-2">
+            {/* Время */}
+            <div className="mb-6">
+              <label className="block mb-2 text-sm font-medium text-gray-700">
+                <Clock className="w-4 h-4 inline mr-1" />
+                Время
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {timeOptions.map((time) => (
+                  <button
+                    key={time}
+                    onClick={() => setNewTripTime(time)}
+                    className={`p-2 text-sm rounded-lg border transition-colors ${
+                      newTripTime === time
+                        ? "bg-blue-500 text-white border-blue-500"
+                        : "bg-white border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-2">
+                <input
+                  type="time"
+                  value={newTripTime}
+                  onChange={(e) => setNewTripTime(e.target.value)}
+                  className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Кнопки */}
+            <div className="flex justify-end space-x-3">
               <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="text-gray-600 hover:text-black"
+                onClick={() => {
+                  setIsCreateModalOpen(false);
+                  // Сбрасываем форму при отмене
+                  const today = new Date();
+                  setNewTripDate(today.toISOString().split('T')[0]);
+                  setNewTripTime("10:00");
+                  setNewTripType("training");
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
               >
                 Отмена
               </button>
               <button
-                onClick={async () => {
-                  if (!newTripDateTime) {
-                    window.Telegram?.WebApp?.showAlert("Укажите дату и время");
-                    return;
-                  }
-                  try {
-                    const response = await axios.post(`${BASE_URL}/trip`, {
-                      type: newTripType,
-                      departure: newTripDateTime.toISOString(),
-                    });
-                    setSeaTrips(response.data);
-                    setIsCreateModalOpen(false);
-                    window.Telegram?.WebApp?.showAlert("Выход создан!");
-                  } catch (error) {
-                    console.error("Ошибка при создании выхода:", error);
-                    const msg = axios.isAxiosError(error)
-                      ? error.response?.data?.message || "Ошибка создания"
-                      : "Ошибка создания";
-                    window.Telegram?.WebApp?.showAlert(msg);
-                  }
-                }}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                onClick={handleCreateTrip}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
                 Создать
               </button>
