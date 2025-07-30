@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, not } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, not } from "drizzle-orm";
 import { Db } from "src/Db";
 import { DbTrip, DbTripUser, DbUser, tripUsers, trips, users } from "./schema";
 import { SeaTripDto } from "src/Types";
@@ -31,7 +31,20 @@ const create = ({ db }: Db) => {
   }
 
   async function addTripUser(tripUser: DbTripUser) {
-    return db.insert(tripUsers).values(tripUser);
+    return db.transaction(async (tx) => {
+      return await tx.insert(tripUsers)
+        .values(tripUser)
+        .onConflictDoUpdate({
+          target: [tripUsers.tripId, tripUsers.userId],
+          set: {
+            role: tripUser.role,
+            kicked: tripUser.kicked,
+            deleted_at: null,
+          },
+          where: isNotNull(tripUsers.deleted_at)
+        })
+        .returning();
+    });
   }
 
   async function updateTripUser(tripId: string, userId: number, updates: Partial<DbTripUser>) {
