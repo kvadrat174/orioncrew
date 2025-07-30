@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import DateTimePicker from "react-datetime-picker";
+import "react-calendar/dist/Calendar.css";
+import "react-datetime-picker/dist/DateTimePicker.css";
 import { Sailboat } from "lucide-react";
 import WebApp from "@twa-dev/sdk";
 import type { TgUser } from "../types/telegram";
@@ -40,7 +43,9 @@ const TelegramCrewApp: React.FC = () => {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newTripType, setNewTripType] = useState<SeaTrip["type"]>("training");
-  const [newTripDateTime, setNewTripDateTime] = useState("");
+  const [newTripDateTime, setNewTripDateTime] = useState<Date | null>(
+    new Date()
+  );
 
   useEffect(() => {
     WebApp.ready();
@@ -348,12 +353,17 @@ const TelegramCrewApp: React.FC = () => {
             <label className="block mb-2 text-sm font-medium">
               Дата и время
             </label>
-            <input
-              type="datetime-local"
-              value={newTripDateTime}
-              onChange={(e) => setNewTripDateTime(e.target.value)}
-              className="w-full mb-4 border px-3 py-2 rounded"
-            />
+            <div className="mb-4">
+              <DateTimePicker
+                onChange={setNewTripDateTime}
+                value={newTripDateTime}
+                disableClock={true}
+                className="w-full"
+                calendarIcon={null}
+                clearIcon={null}
+                format="y-MM-dd HH:mm"
+              />
+            </div>
 
             <div className="flex justify-end space-x-2">
               <button
@@ -371,7 +381,7 @@ const TelegramCrewApp: React.FC = () => {
                   try {
                     const response = await axios.post(`${BASE_URL}/trip`, {
                       type: newTripType,
-                      departure: newTripDateTime,
+                      departure: newTripDateTime.toISOString(),
                     });
                     setSeaTrips(response.data);
                     setIsCreateModalOpen(false);

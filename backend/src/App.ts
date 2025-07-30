@@ -45,7 +45,7 @@ const create = async () => {
     },{
       body: t.Object({
         type: t.String(),
-        departure: t.String({ format: 'date' }),
+        departure: t.String({ format: 'date-time' }),
       }),
       response: DObject(SeaTripDto),
       detail: { tags: ["Season2"] },
