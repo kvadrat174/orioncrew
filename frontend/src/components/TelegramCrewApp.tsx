@@ -13,10 +13,7 @@ import LoadingSpinner from "./LoadingSpinner";
 import TripCard from "./TripCard";
 import EmptyState from "./EmptyState";
 
-// для пуша в гит
 export const BASE_URL = "https://crew.mysailing.ru/api";
-// для разработки фронта
-// const BASE_URL = "http://localhost:3500";
 
 declare global {
   interface Window {
@@ -40,6 +37,10 @@ const TelegramCrewApp: React.FC = () => {
   const [softRemovedMembers, setSoftRemovedMembers] = useState<
     Record<string, string[]>
   >({});
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newTripType, setNewTripType] = useState<SeaTrip["type"]>("training");
+  const [newTripDateTime, setNewTripDateTime] = useState("");
 
   useEffect(() => {
     WebApp.ready();
@@ -86,21 +87,18 @@ const TelegramCrewApp: React.FC = () => {
     fetchTrips();
   }, []);
 
-  // Хендлер на прошлый месяц
   const handlePrevMonth = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     setCurrentMonth(new Date(year, month - 1));
   };
 
-  // Хендлер на следующий месяц
   const handleNextMonth = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     setCurrentMonth(new Date(year, month + 1));
   };
 
-  // Тоггл на развертывание списка команды
   const toggleCrewExpanded = (tripId: string) => {
     setExpandedCrew((prev) => {
       const newSet = new Set(prev);
@@ -113,7 +111,6 @@ const TelegramCrewApp: React.FC = () => {
     });
   };
 
-  // Хендлер на действия пользователя
   const handleCrewAction = async (
     tripId: string,
     action: "add" | "remove",
@@ -121,43 +118,34 @@ const TelegramCrewApp: React.FC = () => {
     byCaptain = false
   ) => {
     if (!tgUser) {
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert("Пользователь не авторизован");
-      }
+      window.Telegram?.WebApp?.showAlert("Пользователь не авторизован");
       return;
     }
 
-    // Для мягкого удаления и восстановления
-    if (byCaptain) {
-      if (action === "remove") {
-        const isSoftRemoved = softRemovedMembers[tripId]?.includes(memberId!);
-
-        if (isSoftRemoved) {
-          // Восстановление участника
-          setSoftRemovedMembers((prev) => ({
-            ...prev,
-            [tripId]: prev[tripId].filter((id) => id !== memberId),
-          }));
-          return;
-        } else {
-          // Мягкое удаление
-          setSoftRemovedMembers((prev) => ({
-            ...prev,
-            [tripId]: [...(prev[tripId] || []), memberId!],
-          }));
-          return;
-        }
+    if (byCaptain && action === "remove") {
+      const isSoftRemoved = softRemovedMembers[tripId]?.includes(memberId!);
+      if (isSoftRemoved) {
+        setSoftRemovedMembers((prev) => ({
+          ...prev,
+          [tripId]: prev[tripId].filter((id) => id !== memberId),
+        }));
+        return;
+      } else {
+        setSoftRemovedMembers((prev) => ({
+          ...prev,
+          [tripId]: [...(prev[tripId] || []), memberId!],
+        }));
+        return;
       }
     }
 
-    // Состояние загрузки для конкретной кнопки
     setActionLoading({ tripId, memberId: memberId || null });
 
     try {
       const endpoint = action === "add" ? "join" : "leave";
       const payload = {
         tripId: tripId,
-        userId: String(memberId || tgUser.id), // Используем memberId или tgUser.id
+        userId: String(memberId || tgUser.id),
         byCaptain,
       };
 
@@ -166,42 +154,28 @@ const TelegramCrewApp: React.FC = () => {
         payload
       );
 
-      // Обновляем данные только при успешном запросе
       setSeaTrips(response.data);
 
-      // Показываем уведомление об успехе в Telegram
-      if (window.Telegram?.WebApp) {
-        const actionName = action === "add" ? "записан" : "выписан";
-        window.Telegram.WebApp.showAlert(
-          `Успешно! Пользователь ${actionName}.`
-        );
-      }
+      window.Telegram?.WebApp?.showAlert(
+        `Успешно! Пользователь ${action === "add" ? "записан" : "выписан"}.`
+      );
     } catch (error) {
       console.error("Ошибка при изменении состава экипажа:", error);
-
-      // Показываем разные сообщения об ошибках
-      let errorMessage = "Произошла ошибка. Попробуйте позже.";
-      if (axios.isAxiosError(error)) {
-        errorMessage = error.response?.data?.message || errorMessage;
-      }
-
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert(errorMessage);
-      }
+      const errorMessage = axios.isAxiosError(error)
+        ? error.response?.data?.message || "Произошла ошибка"
+        : "Произошла ошибка";
+      window.Telegram?.WebApp?.showAlert(errorMessage);
     } finally {
-      // Сбрасываем состояние загрузки независимо от результата
       setActionLoading({ tripId: null, memberId: null });
     }
   };
 
-  // Функции для подтверждения удаления
   const confirmRemoval = async (tripId: string) => {
     if (!softRemovedMembers[tripId]?.length) return;
 
     try {
       setActionLoading({ tripId, memberId: null });
 
-      // Отправляем запрос на удаление для каждого участника
       await Promise.all(
         softRemovedMembers[tripId].map((memberId) =>
           axios.post(`${BASE_URL}/trips/leave`, {
@@ -212,19 +186,14 @@ const TelegramCrewApp: React.FC = () => {
         )
       );
 
-      // Обновляем данные и очищаем мягко удаленных
       const response = await axios.get<SeaTrip[]>(`${BASE_URL}/trips`);
       setSeaTrips(response.data);
       setSoftRemovedMembers((prev) => ({ ...prev, [tripId]: [] }));
 
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert("Удаление подтверждено!");
-      }
+      window.Telegram?.WebApp?.showAlert("Удаление подтверждено!");
     } catch (error) {
       console.error("Ошибка при подтверждении удаления:", error);
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert("Ошибка при удалении участников");
-      }
+      window.Telegram?.WebApp?.showAlert("Ошибка при удалении участников");
     } finally {
       setActionLoading({ tripId: null, memberId: null });
     }
@@ -242,54 +211,40 @@ const TelegramCrewApp: React.FC = () => {
 
       setSeaTrips(response.data);
 
-      // Очищаем мягко удаленных при успешном добавлении
       setSoftRemovedMembers((prev) => ({
         ...prev,
         [tripId]: prev[tripId]?.filter((id) => id !== memberId) || [],
       }));
 
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert("Участник успешно добавлен!");
-      }
+      window.Telegram?.WebApp?.showAlert("Участник успешно добавлен!");
     } catch (error) {
       console.error("Ошибка при добавлении участника:", error);
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert(
-          axios.isAxiosError(error)
-            ? error.response?.data?.message || "Не удалось добавить участника"
-            : "Не удалось добавить участника"
-        );
-      }
+      const msg = axios.isAxiosError(error)
+        ? error.response?.data?.message || "Не удалось добавить участника"
+        : "Не удалось добавить участника";
+      window.Telegram?.WebApp?.showAlert(msg);
     } finally {
       setActionLoading({ tripId: null, memberId: null });
     }
   };
 
-  // Метод получения выходов в дату
   const getTripsForDate = (dateString: string) => {
     return seaTrips.filter((trip) => trip.date === dateString);
   };
 
-  // Проверка на капитана
   const isCaptain = tgUser?.id === CAPTAIN_ID;
 
-  // Проверка на пользователя в списке выхода
   const isUserInTrip = (trip: SeaTrip) => {
     if (!tgUser) return false;
-
     return trip.crew.some((member) => member.id === String(tgUser.id));
   };
 
-  // Дни в календаре
   const days = getDaysInMonth(currentMonth);
-
-  // Выходы на выбранную дату
   const selectedTrips = selectedDate ? getTripsForDate(selectedDate) : null;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-        {/* Заголовок */}
         <div className="bg-blue-600 text-white p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -298,16 +253,24 @@ const TelegramCrewApp: React.FC = () => {
             </div>
             {tgUser && <UserBadge tgUser={tgUser} isCaptain={isCaptain} />}
           </div>
+          {isCaptain && (
+            <div className="mt-2">
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-green-500 hover:bg-green-600 text-white text-sm px-3 py-1 rounded"
+              >
+                + Создать выход
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Навигация по месяцам */}
         <CalendarHeader
           currentMonth={currentMonth}
           onPrevMonth={handlePrevMonth}
           onNextMonth={handleNextMonth}
         />
 
-        {/* Календарь */}
         <CalendarGrid
           currentMonth={currentMonth}
           days={days}
@@ -316,7 +279,6 @@ const TelegramCrewApp: React.FC = () => {
           onDateSelect={setSelectedDate}
         />
 
-        {/* Детали выбранного дня */}
         {loading ? (
           <LoadingSpinner />
         ) : selectedTrips?.length ? (
@@ -340,7 +302,10 @@ const TelegramCrewApp: React.FC = () => {
                 }
                 onConfirmRemoval={() => confirmRemoval(trip.id)}
                 onCancelRemoval={() =>
-                  setSoftRemovedMembers((prev) => ({ ...prev, [trip.id]: [] }))
+                  setSoftRemovedMembers((prev) => ({
+                    ...prev,
+                    [trip.id]: [],
+                  }))
                 }
                 onAddMember={(memberId) => handleAddMember(trip.id, memberId)}
               />
@@ -351,6 +316,82 @@ const TelegramCrewApp: React.FC = () => {
           <EmptyState type="no-trips" />
         )}
       </div>
+
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80 shadow-lg relative">
+            <h2 className="text-lg font-bold mb-4">Создать выход</h2>
+
+            <label className="block mb-2 text-sm font-medium">Тип</label>
+            <select
+              value={newTripType}
+              onChange={(e) =>
+                setNewTripType(e.target.value as SeaTrip["type"])
+              }
+              className="w-full mb-4 border px-3 py-2 rounded"
+            >
+              {[
+                "morningTraining",
+                "training",
+                "trainingRace",
+                "race",
+                "trip",
+                "commercial",
+                "ladoga",
+              ].map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+
+            <label className="block mb-2 text-sm font-medium">
+              Дата и время
+            </label>
+            <input
+              type="datetime-local"
+              value={newTripDateTime}
+              onChange={(e) => setNewTripDateTime(e.target.value)}
+              className="w-full mb-4 border px-3 py-2 rounded"
+            />
+
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="text-gray-600 hover:text-black"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={async () => {
+                  if (!newTripDateTime) {
+                    window.Telegram?.WebApp?.showAlert("Укажите дату и время");
+                    return;
+                  }
+                  try {
+                    const response = await axios.post(`${BASE_URL}/trip`, {
+                      type: newTripType,
+                      departure: newTripDateTime,
+                    });
+                    setSeaTrips(response.data);
+                    setIsCreateModalOpen(false);
+                    window.Telegram?.WebApp?.showAlert("Выход создан!");
+                  } catch (error) {
+                    console.error("Ошибка при создании выхода:", error);
+                    const msg = axios.isAxiosError(error)
+                      ? error.response?.data?.message || "Ошибка создания"
+                      : "Ошибка создания";
+                    window.Telegram?.WebApp?.showAlert(msg);
+                  }
+                }}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Создать
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

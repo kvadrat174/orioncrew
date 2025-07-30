@@ -12,7 +12,6 @@ interface CrewSectionProps {
     name: string;
     position: string;
   }>;
-  // allTeamMembers: TeamMember[];
   isExpanded: boolean;
   isCaptain: boolean;
   actionLoading: {
