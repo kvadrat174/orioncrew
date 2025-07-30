@@ -123,6 +123,7 @@ const create = async () => {
     .post(
       "/trips/leave",
       async ({ body: { userId, tripId } }) => {
+        console.log("/trips/leave", userId, tripId)
         const response = await TripsService.updateParticipant(
           orionDb,
           userId,

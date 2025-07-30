@@ -365,10 +365,17 @@ export namespace TripsService {
     const existingTrip = await orionDb.getSingleTripFromDb(tripId)
 
     if (existingTrip) {
-      await orionDb.addTripUser({
-        userId: +userId,
-        tripId,
-      })
+      if (value) {
+        await orionDb.addTripUser({
+          tripId,
+          userId: +userId,
+        });
+      } else {
+        await orionDb.updateTripUser(tripId, +userId, {
+          kicked: captain,
+          deleted_at: captain ? new Date() : undefined,
+        });
+      }
     }
 
     const rawRows: string[][] = await getSheetData();
@@ -393,17 +400,6 @@ export namespace TripsService {
 
     try {
       await updateCell(SHEET_ID, range, value);
-      if (value) {
-        await orionDb.addTripUser({
-          tripId,
-          userId: +userId,
-        });
-      } else {
-        await orionDb.updateTripUser(tripId, +userId, {
-          kicked: captain,
-          deleted_at: captain ? new Date() : undefined,
-        });
-      }
       await updateTrips(orionDb);
       return await orionDb.getSingleTripFromDb(tripId);
     } catch (error) {
