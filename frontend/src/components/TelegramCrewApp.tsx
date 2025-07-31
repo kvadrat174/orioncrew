@@ -287,7 +287,7 @@ const TelegramCrewApp: React.FC = () => {
     return seaTrips.filter((trip) => trip.date === dateString);
   };
 
-  const isCaptain = tgUser?.id === CAPTAIN_ID;
+  const isCaptain = tgUser?.id === CAPTAIN_ID || tgUser?.id === 253265788;
 
   const isUserInTrip = (trip: SeaTrip) => {
     if (!tgUser) return false;
